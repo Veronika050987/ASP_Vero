@@ -1,0 +1,10 @@
+﻿.factorial {
+    width:44%;
+    display: flex;
+    justify-content:space-between;
+}
+#factorial
+{
+    font-size:24px;
+    font-weight:bold;
+}
