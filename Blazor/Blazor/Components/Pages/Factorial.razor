@@ -7,18 +7,18 @@
 
 <h3>Factorial</h3>
 
-<div class="factorial">
-	<input type="number" min="0" @bind="number" @bind:after="Calculate" />
-	<div id="factorial">@factorial</div>
-	
-</div>
+<div class="factorial-container">
+	<div class="factorial">
+		<input type="number" min="0" @bind="number" @bind:after="Calculate" />
+	</div>
+		<div id="factorial">Факториал: @factorial</div>
 	<ol>
 		@{
-			foreach(BigInteger i in results)
-			{
-				<li>@i</li>
-			}
+		foreach(BigInteger i in results)
+		{
+			<li>@i</li>
+		}
 		}
 	</ol>
-
+</div>
 

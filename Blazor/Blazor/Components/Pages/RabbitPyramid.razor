@@ -1,0 +1,35 @@
+﻿@page "/fibonacci"
+@rendermode InteractiveServer
+
+@using System.Numerics
+
+<PageTitle>Fibonacci sequence</PageTitle>
+
+<div class="pyramid-container">
+    <h3>Пирамида кроликов Фибоначчи</h3>
+    <input type="number" @bind="levels" min="1" max="6" />
+    <button @onclick="() => StateHasChanged()">Построить</button>
+
+    <div class="tree">
+        @RenderNode(BuildTree(0, levels))
+    </div>
+</div>
+
+@code {
+    RenderFragment RenderNode(RabbitNode node) => @<div class="node">
+    <div class="rabbit-box">
+        🐇🐇
+    </div>
+@if (node.Left != null || node.Right != null)
+    {
+    <div class="children">
+        @if (node.Left != null) {
+        @RenderNode(node.Left)
+                }
+        @if (node.Right != null) {
+        @RenderNode(node.Right)
+                }
+    </div>
+    }
+</div>;
+}

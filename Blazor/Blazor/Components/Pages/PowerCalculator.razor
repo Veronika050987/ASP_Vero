@@ -1,0 +1,27 @@
+﻿@page "/power-calculator"
+@rendermode InteractiveServer
+
+<PageTitle>Power calculator</PageTitle>
+
+<div class="calculator-container">
+    <h3>Калькулятор степени</h3>
+
+    <div class="input-group">
+        <label>Основание:</label>
+        <input type="number" @bind="baseNumber" />
+    </div>
+
+    <div class="input-group">
+        <label>Степень:</label>
+        <input type="number" min="1" @bind="exponent" />
+    </div>
+
+    <button @onclick="Calculate">Вычислить</button>
+
+    @if (isCalculated)
+    {
+        <div class="result">
+            Результат: @result
+        </div>
+    }
+</div>
