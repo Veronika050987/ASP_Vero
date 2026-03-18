@@ -1,0 +1,23 @@
+﻿﻿ul {
+    list-style: none;
+}
+input:hover{
+    background-color: aquamarine;
+}
+.complete-task {
+    text-decoration: line-through;
+    color: gray;
+}
+
+.statistics {
+    display: flex;
+    justify-content: space-around;
+    font-size: 24px;
+    margin: 32px;
+    color: #008000;
+}
+
+.delete {
+    border: none;
+    background-color: white;
+}

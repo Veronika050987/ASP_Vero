@@ -1,0 +1,29 @@
+﻿@page "/todo"
+@rendermode InteractiveServer
+@using TODOlist.Classes;
+
+<PageTitle>TODO</PageTitle>
+
+<h3>TODO:</h3>
+
+<div class="statistics">
+	<div>Всего: @todos.Count</div>
+	<div>Выполнено: @todos.Where(t => t.DONE == true).Count()</div>
+	<div>Запланировано: @todos.Where(t => t.DONE == false).Count() </div>
+</div>
+
+<input type="text" placeholder="Что Вы хотите сделать?" 
+		@bind="task" 
+		@onkeyup='( KeyboardEventArgs e) => {if(e.Key == "Enter" && !todos.Contains(new TODOitem{Title=task}))AddTask();}' />
+<button @onclick="AddTask">Добавить</button>
+
+<ul>
+	@foreach (TODOitem i in todos)
+	{
+		<li class=@(!i.DONE ? "" : "complete-task")>
+			<input type="checkbox" @bind="i.DONE" id=@i.GetHashCode().ToString() /> 
+			<label for=@i.GetHashCode().ToString()>@i.Title</label>
+			<button class="delete" @onclick='() => { todos.Remove(i); }'>❌</button>
+		</li>
+	}
+</ul>
