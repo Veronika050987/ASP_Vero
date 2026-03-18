@@ -1,7 +1,7 @@
 ﻿.converter-container {
     padding: 20px;
-    max-width: 400px;
-    border: 1px solid #ccc;
+    max-width: 420px;
+    border: 5px solid #008080;
     border-radius: 8px;
 }
 
@@ -9,6 +9,9 @@
     width: 100%;
     padding: 8px;
     margin-bottom: 10px;
+}
+input:hover{
+    background-color:aquamarine;
 }
 
 .result {

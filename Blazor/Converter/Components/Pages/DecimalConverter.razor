@@ -8,12 +8,11 @@
 <PageTitle>Dec2Bin</PageTitle>
 
 <div class="converter-container">
-    <h3>Конвертер чисел</h3>
+    <h3>Введите десятичное число: </h3>
 
     <input type="number"
            class="input-field"
            placeholder="Введите десятичное число"
-           min="0"
            @bind="decimalValue"
            @bind:event="oninput"
            @onkeyup="Calculate" />
