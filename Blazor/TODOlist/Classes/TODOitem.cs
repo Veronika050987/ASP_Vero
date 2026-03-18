@@ -27,13 +27,13 @@
 		//	return HashCode.Combine(Title);
 		//}
 		//////////////////////////////////////////////////////////////////////
-		public override bool Equals(object? other)
-		{
-			return this.Title.Equals((other as TODOitem).Title);
-		}
-		public override int GetHashCode()
-		{
-			return HashCode.Combine(Title);
-		}
+		//public override bool Equals(object? other)
+		//{
+		//	return this.Title.Equals((other as TODOitem).Title);
+		//}
+		//public override int GetHashCode()
+		//{
+		//	return HashCode.Combine(Title);
+		//}
 	}
 }

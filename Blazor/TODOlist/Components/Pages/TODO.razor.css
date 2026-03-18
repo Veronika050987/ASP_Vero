@@ -1,5 +1,6 @@
 ﻿﻿ul {
     list-style: none;
+    margin-top:6px;
 }
 input:hover{
     background-color: aquamarine;
@@ -20,4 +21,10 @@ input:hover{
 .delete {
     border: none;
     background-color: white;
+}
+
+.error-message {
+    color: red;
+    margin-top: 10px;
+    font-weight: bold;
 }

@@ -12,10 +12,19 @@
 	<div>Запланировано: @todos.Where(t => t.DONE == false).Count() </div>
 </div>
 
-<input type="text" placeholder="Что Вы хотите сделать?" 
-		@bind="task" 
-		@onkeyup='( KeyboardEventArgs e) => {if(e.Key == "Enter" && !todos.Contains(new TODOitem{Title=task}))AddTask();}' />
-<button @onclick="AddTask">Добавить</button>
+<div class="input-area">
+	<input type="text" placeholder="Что Вы хотите сделать?"
+		   @bind="task"
+		   @onkeyup='( KeyboardEventArgs e) => {if(e.Key == "Enter" && !todos.Contains(new TODOitem{Title=task}))AddTask();}' />
+	<button @onclick="AddTask">Добавить</button>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+	<div class="error-message">
+		@errorMessage
+	</div>
+}
 
 <ul>
 	@foreach (TODOitem i in todos)
