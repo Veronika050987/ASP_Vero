@@ -1,0 +1,32 @@
+﻿@page "/Dec2Bin"
+@rendermode InteractiveServer
+
+@using Converter.Components.Pages 
+
+@inject DecimalConverter Converter
+
+<PageTitle>Dec2Bin</PageTitle>
+
+<div class="converter-container">
+    <h3>Конвертер чисел</h3>
+
+    <input type="number"
+           class="input-field"
+           placeholder="Введите десятичное число"
+           min="0"
+           @bind="decimalValue"
+           @bind:event="oninput"
+           @onkeyup="Calculate" />
+
+    <p>Бинарный вид: <span class="result">@binaryResult</span></p>
+</div>
+
+@code {
+    private int decimalValue;
+    private string binaryResult = "0";
+
+    private void Calculate()
+    {
+        binaryResult = Converter.ToBinary(decimalValue);
+    }
+}

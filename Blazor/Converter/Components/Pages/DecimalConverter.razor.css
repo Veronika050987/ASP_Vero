@@ -1,0 +1,18 @@
+﻿.converter-container {
+    padding: 20px;
+    max-width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+.result {
+    font-weight: bold;
+    color: #007bff;
+    font-size: 1.2rem;
+}
