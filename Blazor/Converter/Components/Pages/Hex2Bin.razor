@@ -1,0 +1,73 @@
+﻿@page "/Hex2Bin"
+@rendermode InteractiveServer
+
+@using System.Numerics
+
+<PageTitle>Hex2Bin</PageTitle>
+
+<div class="converter-container">
+    <h3>Hex2Bin</h3>
+
+    <input type="text"
+           class="input-field"
+           placeholder="Введите HEX число"
+           @bind="hexInput"
+           @bind:event="oninput"
+           @onkeyup="ConvertHexToBinary" />
+    <br />
+    <br />
+
+    @if (!string.IsNullOrEmpty(resultMessage))
+    {
+        <p style="color: @(isError ? "red" : "green")">
+            @resultMessage
+        </p>
+    }
+</div>
+
+@code {
+    private string hexInput = "";
+    private string resultMessage = "";
+    private bool isError = false;
+
+    private void ConvertHexToBinary()
+    {
+        if (string.IsNullOrWhiteSpace(hexInput))
+        {
+            resultMessage = "Пожалуйста, введите шестнадцатеричное число: ";
+            isError = true;
+            return;
+        }
+        try
+        {
+            // 1. Убираем лишние пробелы
+            string cleanInput = hexInput.Trim();
+
+            // 2. Преобразуем HEX в long
+            // Используем TryParse или Convert.ToInt64 с основанием 16
+            long decimalValue = Convert.ToInt64(cleanInput, 16);
+
+            // 3. Преобразуем число в двоичную строку
+            // Второй аргумент '2' указывает, что нужно получить двоичный вид
+            string binaryValue = Convert.ToString(decimalValue, 2);
+
+            resultMessage = $"Результат: {binaryValue}";
+            isError = false;
+        }
+        catch (FormatException)
+        {
+            resultMessage = "Ошибка: Введите корректное шестнадцатеричное число (0-9, A-F).";
+            isError = true;
+        }
+        catch (OverflowException)
+        {
+            resultMessage = "Ошибка: Число слишком большое.";
+            isError = true;
+        }
+        catch (Exception ex)
+        {
+            resultMessage = $"Ошибка: {ex.Message}";
+            isError = true;
+        }
+    }
+}
