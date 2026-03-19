@@ -1,0 +1,69 @@
+﻿@page "/Bin2Hex"
+@rendermode InteractiveServer
+
+<PageTitle>Bin2Hex</PageTitle>
+
+<div class="converter-container">
+    <h3>Bin2Hex</h3>
+
+    <input type="text"
+           placeholder="Введите двоичное число"
+           @bind="binaryInput"
+           @bind:event="oninput"
+           @onkeyup="ConvertHex" />
+    <br />
+    <br />
+
+    @if (!string.IsNullOrEmpty(resultMessage))
+    {
+        <p style="color: @(isError ? "red" : "green")">
+            @resultMessage
+        </p>
+    }
+</div>
+
+@code {
+    private string binaryInput = "";
+    private string resultMessage = "";
+    private bool isError = false;
+
+    private void ConvertHex()
+    {
+        if (string.IsNullOrWhiteSpace(binaryInput))
+        {
+            resultMessage = "Пожалуйста, введите двоичное число: ";
+            isError = true;
+            return;
+        }
+        try
+        {
+            // 1. Убираем пробелы
+            string cleanInput = binaryInput.Replace(" ", "");
+
+            // 2. Преобразуем двоичную строку в число (используем long для больших чисел)
+            long decimalValue = Convert.ToInt64(cleanInput, 2);
+
+            // 3. Преобразуем число в шестнадцатеричную строку
+            // "X" означает формат HEX, буквы будут заглавными
+            string hexValue = decimalValue.ToString("X");
+
+            resultMessage = $"Результат: {hexValue}";
+            isError = false;
+        }
+        catch (FormatException)
+        {
+            resultMessage = "Ошибка: Введите только 0 и 1.";
+            isError = true;
+        }
+        catch (OverflowException)
+        {
+            resultMessage = "Ошибка: Число слишком длинное.";
+            isError = true;
+        }
+        catch (Exception ex)
+        {
+            resultMessage = $"Ошибка: {ex.Message}";
+            isError = true;
+        }
+    }
+}

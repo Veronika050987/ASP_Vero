@@ -1,6 +1,6 @@
 ﻿namespace Converter.Components.Pages
 {
-	public partial class DecimalConverter
+	public partial class Decimal2BinaryConverter
 	{
 		public string ToBinary(int decimalNumber)
 		{

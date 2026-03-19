@@ -1,0 +1,59 @@
+﻿@page "/Bin2Dec"
+@rendermode InteractiveServer
+
+@using System.Numerics
+
+<PageTitle>Bin2Dec</PageTitle>
+
+<div class="converter-container">
+    <h3>Bin2Dec</h3>
+
+    <input type="number"
+        placeholder="Введите двоичное число (например: 1010)"
+        @bind="binaryInput"
+        @bind:event="oninput"
+        @onkeyup="ConvertBinary" />
+    <br />
+    <br />
+
+    @if (!string.IsNullOrEmpty(resultMessage))
+    {
+        <p style="color: @(isError ? "red" : "green")">
+            @resultMessage
+        </p>
+    }
+</div>
+
+@code {
+    private string binaryInput = "";
+    private string resultMessage = "";
+    private bool isError = false;
+
+    private void ConvertBinary()
+    {
+        // 1. Проверяем на пустоту
+        if (string.IsNullOrWhiteSpace(binaryInput))
+        {
+            resultMessage = "Пожалуйста, введите двоичное число: ";
+            isError = true;
+            return;
+        }
+
+        // 2. Используем TryParse, который не вызывает падение программы
+        try
+        {
+            // Удаляем возможные пробелы, если пользователь их случайно ввел
+            string cleanInput = binaryInput.Trim();
+
+            int decimalValue = Convert.ToInt32(cleanInput, 2);
+            resultMessage = $"Результат: {decimalValue}";
+            isError = false;
+        }
+        catch
+        {
+            // Если что-то пошло не так, просто показываем сообщение пользователю
+            resultMessage = "Ошибка: введите корректное двоичное число (только 0 и 1).";
+            isError = true;
+        }
+    }
+}

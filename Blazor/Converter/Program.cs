@@ -6,7 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
-builder.Services.AddScoped<Converter.Components.Pages.DecimalConverter>();
+builder.Services.AddScoped<Converter.Components.Pages.Decimal2BinaryConverter>();
+builder.Services.AddScoped<Converter.Components.Pages.Decimal2HexadecimalConverter>();
 
 var app = builder.Build();
 

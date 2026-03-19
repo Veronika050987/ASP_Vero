@@ -1,0 +1,31 @@
+﻿@page "/Dec2Hex"
+@rendermode InteractiveServer
+
+@using Converter.Components.Pages
+
+@inject Decimal2HexadecimalConverter Converter
+
+<PageTitle>Dec2Hex</PageTitle>
+
+<div class="converter-container">
+    <h3>Введите десятичное число: </h3>
+
+    <input type="text"
+           class="input-field"
+           placeholder="Введите десятичное число"
+           @bind="decimalValue"
+           @bind:event="oninput"
+           @onkeyup="Calculate" />
+
+    <p>Шестнадцатеричный вид: <span class="result">@hexadecimalResult</span></p>
+</div>
+
+@code {
+    private int decimalValue;
+    private string hexadecimalResult = "0";
+
+    private void Calculate()
+    {
+        hexadecimalResult = Converter.ToHexadecimal(decimalValue);
+    }
+}

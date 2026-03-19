@@ -1,0 +1,65 @@
+﻿@page "/Hex2Dec"
+@rendermode InteractiveServer
+
+@using System.Numerics
+
+<PageTitle>Hex2Dec</PageTitle>
+
+<div class="converter-container">
+    <h3>Hex2Dec</h3>
+
+    <input type="text"
+           placeholder="Введите HEX (1A, FF, 2F)"
+           @bind="hexInput"
+           @bind:event="oninput"
+           @onkeyup="ConvertHex" />
+    <br />
+    <br />
+
+    @if (!string.IsNullOrEmpty(resultMessage))
+    {
+        <p style="color: @(isError ? "red" : "green")">
+            @resultMessage
+        </p>
+    }
+</div>
+
+@code {
+    private string hexInput = "";
+    private string resultMessage = "";
+    private bool isError = false;
+
+    private void ConvertHex()
+    {
+        if (string.IsNullOrWhiteSpace(hexInput))
+        {
+            resultMessage = "Пожалуйста, введите шестнадцатеричное число: ";
+            isError = true;
+            return;
+        }
+        try
+        {
+            // 1. Обязательно убираем лишние пробелы по краям
+            string input = hexInput.Trim();
+
+            // 2. Если есть префикс 0x, убираем его (хотя Convert должен его понимать,
+            // иногда возникают конфликты)
+            if (input != null && input.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                input = input.Substring(2);
+            }
+
+            // 3. Используем ToInt64 (long), так как HEX-числа часто выходят за пределы int
+            // И используем NumberStyles.HexNumber для явного указания формата
+            long decimalValue = long.Parse(input, System.Globalization.NumberStyles.HexNumber);
+
+            resultMessage = $"Результат: {decimalValue}";
+            isError = false;
+        }
+        catch (Exception)
+        {
+            resultMessage = "Ошибка: Введите корректное шестнадцатеричное число (0-9, A-F).";
+            isError = true;
+        }
+    }
+}
