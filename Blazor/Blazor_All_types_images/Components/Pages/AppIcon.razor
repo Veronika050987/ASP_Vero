@@ -1,0 +1,28 @@
+﻿<span class="app-icon" style="background-color: @Color; mask-image: url('@Path'); -webkit-mask-image: url('@Path');"></span>
+
+@if (IsMask)
+{
+    <span class="app-icon" style="background-color: @Color; mask-image: url('@Path'); ..."></span>
+}
+else
+{
+    <img src="" alt="icon" style="width: 24px; height: 24px;" />
+}
+
+@code {
+    [Parameter] public bool IsMask { get; set; } = true;
+    [Parameter] public string Path { get; set; } = "";
+    [Parameter] public string Color { get; set; } = "black";
+}
+
+<style>
+    .app-icon {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        mask-size: contain;
+        background-color: currentColor;
+    }
+</style>
