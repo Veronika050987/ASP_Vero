@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TODOlist", "TODOlist\TODOli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Converter", "Converter\Converter.csproj", "{5DEBDB4C-BF52-479F-9B5C-A751C7CA40C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Movies", "Movies\Movies.csproj", "{1C40371D-5987-474C-8CDA-D9D090C798E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{5DEBDB4C-BF52-479F-9B5C-A751C7CA40C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DEBDB4C-BF52-479F-9B5C-A751C7CA40C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5DEBDB4C-BF52-479F-9B5C-A751C7CA40C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C40371D-5987-474C-8CDA-D9D090C798E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C40371D-5987-474C-8CDA-D9D090C798E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C40371D-5987-474C-8CDA-D9D090C798E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C40371D-5987-474C-8CDA-D9D090C798E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
