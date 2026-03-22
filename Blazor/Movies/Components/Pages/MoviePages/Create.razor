@@ -1,8 +1,13 @@
 ﻿@page "/movies/create"
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.EntityFrameworkCore
 @using Movies.Models
+@using Microsoft.AspNetCore.Hosting
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject IWebHostEnvironment Environment
+
+@rendermode InteractiveServer
 
 <PageTitle>Create</PageTitle>
 
@@ -36,6 +41,18 @@
                 <InputText id="URL" @bind-Value="Movie.URL" class="form-control" />
                 <ValidationMessage For="() => Movie.URL" class="text-danger" />
             </div>
+
+            <div class="mb-3">
+                <label for="brief" class="form-label">Brief:</label>
+                <InputText id="brief" @bind-Value="Movie.Brief" class="form-control" />
+                <ValidationMessage For="() => Movie.Brief" class="text-danger" />
+            </div>
+
+         @*    <div class="mb-3">
+                <label class="form-label">Poster:</label>
+                <InputFile OnChange="HandleFileSelected" class="form-control" accept="image/*" />
+            </div> *@
+
 
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>

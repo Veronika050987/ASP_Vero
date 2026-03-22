@@ -1,8 +1,11 @@
 ﻿@page "/movies/details"
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.EntityFrameworkCore
 @using Movies.Models
+@using Microsoft.AspNetCore.Hosting
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject IWebHostEnvironment Environment
 
 <PageTitle>Details</PageTitle>
 
@@ -27,6 +30,8 @@
                     <dd class="col-sm-10">@movie.Genre</dd>
                     <dt class="col-sm-2">URL</dt>
                     <dd class="col-sm-10"><a href="@movie.URL">@movie.URL</a></dd>
+                    <dt class="col-sm-2">Brief</dt>
+                    <dd class="col-sm-10">@movie.Brief</dd>
                 </dl>
             </div>
             <div>
