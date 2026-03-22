@@ -29,6 +29,7 @@
             <dt class="col-sm-2">Genre</dt>
             <dd class="col-sm-10">@movie.Genre</dd>
         </dl>
+
         <EditForm method="post" Model="movie" OnValidSubmit="DeleteMovie" FormName="delete" Enhance>
             <button type="submit" class="btn btn-danger" disabled="@(movie is null)">Delete</button> |
             <a href="/movies">Back to List</a>
