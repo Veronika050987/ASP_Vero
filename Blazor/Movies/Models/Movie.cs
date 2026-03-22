@@ -18,5 +18,7 @@ namespace Movies.Models
 		public string? URL { get; set; }
 
 		public string? Brief { get; set; }
+
+		public string? ImagePath { get; set; }
 	}
 }
