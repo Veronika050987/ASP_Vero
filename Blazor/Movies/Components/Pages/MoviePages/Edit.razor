@@ -1,8 +1,12 @@
 ﻿@page "/movies/edit"
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.EntityFrameworkCore
 @using Movies.Models
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject IWebHostEnvironment Environment
+
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -48,9 +52,15 @@ else
                     <ValidationMessage For="() => Movie.Brief" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="poster" class="form-label">Poster:</label>
-                    <InputText id="poster" @bind-Value="Movie.Poster" class="form-control" />
-                    <ValidationMessage For="() => Movie.Poster" class="text-danger" />
+                    <label>Current Poster:</label><br />
+                    @if (!string.IsNullOrEmpty(Movie.Poster))
+                    {
+                        <img src="" style="max-width: 200px;" />
+                
+                        <br />
+                    }
+                    <label for="imagefile" class="form-label">Change Poster:</label>
+                    <InputFile id="imagefile" OnChange="LoadFiles" class="form-control" accept="image/*" />
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
@@ -69,6 +79,10 @@ else
     [SupplyParameterFromForm]
     private Movie? Movie { get; set; }
 
+    private IBrowserFile? uploadedFile;
+
+    // Инъекция Environment добавлена вверху @inject IWebHostEnvironment Environment
+
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
@@ -80,29 +94,40 @@ else
         }
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private void LoadFiles(InputFileChangeEventArgs e)
+    {
+        uploadedFile = e.File;
+    }
+
     private async Task UpdateMovie()
     {
+        if (uploadedFile != null)
+        {
+            // 1. Создаем папку, если нет
+            string uploadsFolder = Path.Combine(Environment.WebRootPath, "movie_posters");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            // 2. Генерируем имя и сохраняем
+            string uniqueFileName = Guid.NewGuid().ToString() + "_" + uploadedFile.Name;
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            await using FileStream fs = new(filePath, FileMode.Create);
+            await uploadedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5).CopyToAsync(fs);
+
+            // 3. Удаляем старый файл, если он был (опционально)
+            if (!string.IsNullOrEmpty(Movie.Poster))
+            {
+                var oldFilePath = Path.Combine(Environment.WebRootPath, Movie.Poster.TrimStart('/'));
+                if (File.Exists(oldFilePath)) File.Delete(oldFilePath);
+            }
+
+            // 4. Обновляем путь в модели
+            Movie.Poster = "/movie_posters/" + uniqueFileName;
+        }
+
         using var context = DbFactory.CreateDbContext();
         context.Attach(Movie!).State = EntityState.Modified;
-
-        try
-        {
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!MovieExists(Movie!.Id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
-        }
-
+        await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/movies");
     }
 
