@@ -19,6 +19,6 @@ namespace Movies.Models
 
 		public string? Brief { get; set; }
 
-		public string? ImagePath { get; set; }
+		public string? Poster { get; set; }
 	}
 }

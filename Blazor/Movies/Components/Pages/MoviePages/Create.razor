@@ -89,7 +89,7 @@
             await uploadedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5).CopyToAsync(fs);
 
             // 3. Записываем путь в модель
-            Movie.ImagePath = "/movie_posters/" + uniqueFileName;
+            Movie.Poster = "/movie_posters/" + uniqueFileName;
         }
 
         using var context = DbFactory.CreateDbContext();
