@@ -15,25 +15,16 @@
 </p>
 
 <QuickGrid Class="table" Items="context.Movie">
-    @* <PropertyColumn Property="movie => movie.Title" /> *@
-    <TemplateColumn Title="Title">
-        @if (!string.IsNullOrEmpty(context.URL))
-        {
-            <a href="@context.URL" target="_blank" rel="noopener noreferrer">@context.Title</a>
-        }
-        else
-        {
-            @context.Title
-        }
-    </TemplateColumn>
+    @* <PropertyColumn Property="movie => movie.Title" ></PropertyColumn> *@
+    <TemplateColumn Title="Title"><a href="@($"movies/details?id={context.Id}")">@context.Title</a></TemplateColumn>
     <PropertyColumn Property="movie => movie.ReleaseDate" />
     <PropertyColumn Property="movie => movie.Genre" />
 
-    <TemplateColumn Context="movie">
+    @* <TemplateColumn Context="movie">
         <a href="@($"movies/edit?id={movie.Id}")">Edit</a> |
         <a href="@($"movies/details?id={movie.Id}")">Details</a> |
-       @*  <a href="@($"movies/delete?id={movie.Id}")">Delete</a> *@
-    </TemplateColumn>
+        <a href="@($"movies/delete?id={movie.Id}")">Delete</a>
+    </TemplateColumn> *@
 </QuickGrid>
 
 @code {
