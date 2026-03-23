@@ -1,13 +1,8 @@
 ﻿@page "/movies/create"
-@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.EntityFrameworkCore
 @using Movies.Models
-@using Microsoft.AspNetCore.Hosting
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
-@inject IWebHostEnvironment Environment
-
-@rendermode InteractiveServer
 
 <PageTitle>Create</PageTitle>
 
@@ -34,25 +29,13 @@
                 <label for="genre" class="form-label">Genre:</label> 
                 <InputText id="genre" @bind-Value="Movie.Genre" class="form-control" /> 
                 <ValidationMessage For="() => Movie.Genre" class="text-danger" /> 
-            </div> 
+            </div>
+            <div class="mb-3">
+                <label for="URL" class="form-label">URL:</label> 
+                <InputText id="URL" @bind-Value="Movie.URL" class="form-control" /> 
+                <ValidationMessage For="() => Movie.URL" class="text-danger" /> 
+            </div>
             
-            <div class="mb-3">
-                <label for="URL" class="form-label">URL:</label>
-                <InputText id="URL" @bind-Value="Movie.URL" class="form-control" />
-                <ValidationMessage For="() => Movie.URL" class="text-danger" />
-            </div>
-
-            <div class="mb-3">
-                <label for="brief" class="form-label">Brief:</label>
-                <InputText id="brief" @bind-Value="Movie.Brief" class="form-control" />
-                <ValidationMessage For="() => Movie.Brief" class="text-danger" />
-            </div>
-
-            <div class="mb-3">
-                <label for="imagepath" class="form-label">Poster:</label>
-                <InputFile OnChange="LoadFiles" class="form-control" accept="image/*" />
-            </div>
-
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
@@ -66,32 +49,9 @@
     [SupplyParameterFromForm]
     private Movie Movie { get; set; } = new();
 
-    private IBrowserFile? uploadedFile;
-
-    private void LoadFiles(InputFileChangeEventArgs e)
-    {
-        uploadedFile = e.File;
-    }
-
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddMovie()
     {
-        if (uploadedFile != null)
-        {
-            // 1. Генерируем уникальное имя
-            string uploadsFolder = Path.Combine(Environment.WebRootPath, "movie_posters");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + uploadedFile.Name;
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            // 2. Сохраняем файл (ограничение размера 500kb по умолчанию в Blazor, можно увеличить в Program.cs)
-            await using FileStream fs = new(filePath, FileMode.Create);
-            await uploadedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5).CopyToAsync(fs);
-
-            // 3. Записываем путь в модель
-            Movie.Poster = "/movie_posters/" + uniqueFileName;
-        }
-
         using var context = DbFactory.CreateDbContext();
         context.Movie.Add(Movie);
         await context.SaveChangesAsync();

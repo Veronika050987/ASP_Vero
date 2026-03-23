@@ -20,7 +20,7 @@ else
         <div class="col-md-4">
             <EditForm method="post" Model="Movie" OnValidSubmit="UpdateMovie" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
-                <ValidationSummary role="alert"/>
+                <ValidationSummary role="alert" />
                 <input type="hidden" name="Movie.Id" value="@Movie.Id" />
                 <div class="mb-3">
                     <label for="title" class="form-label">Title:</label>
@@ -38,15 +38,17 @@ else
                     <ValidationMessage For="() => Movie.Genre" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="genre" class="form-label">URL:</label>
-                    <InputText id="genre" @bind-Value="Movie.URL" class="form-control" />
+                    <label for="url" class="form-label">URL:</label>
+                    <InputText id="url" @bind-Value="Movie.URL" class="form-control" />
                     <ValidationMessage For="() => Movie.URL" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="brief" class="form-label">Brief:</label>
-                    <InputText id="brief" @bind-Value="Movie.Brief" class="form-control" />
-                    <ValidationMessage For="() => Movie.Brief" class="text-danger" />
+                    <label for="poster" class="form-label">Poster:</label>
+                    <InputText id="poster" @bind-Value="Movie.Poster" class="form-control" />
+                    <ValidationMessage For="() => Movie.Poster" class="text-danger" />
                 </div>
+
+
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
         </div>

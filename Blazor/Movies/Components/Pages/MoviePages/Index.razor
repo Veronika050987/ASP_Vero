@@ -14,30 +14,30 @@
     <a href="movies/create">Create New</a>
 </p>
 
-<QuickGrid Class="table" Items="context.Movie">
-    @* <PropertyColumn Property="movie => movie.Title" /> *@
-    <TemplateColumn Title="Title">
-        @if (!string.IsNullOrEmpty(context.URL))
-        {
-            <a href="@context.URL" target="_blank" rel="noopener noreferrer">@context.Title</a>
-        }
-        else
-        {
-            @context.Title
-        }
-    </TemplateColumn>
+<div>
+    <form action="/movies" data-enhance>
+        <input type="search" name="titleFilter" />
+        <input type="submit" value="Search" />
+    </form>
+</div>
+
+<QuickGrid Class="table" Items="FilteredMovies">
+    @* <PropertyColumn Property="movie => movie.Title" ></PropertyColumn> *@
+    <TemplateColumn Title="Title"><a href="@($"movies/details?id={context.Id}")">@context.Title</a></TemplateColumn>
     <PropertyColumn Property="movie => movie.ReleaseDate" />
     <PropertyColumn Property="movie => movie.Genre" />
 
-    <TemplateColumn Context="movie">
+    @* <TemplateColumn Context="movie">
         <a href="@($"movies/edit?id={movie.Id}")">Edit</a> |
         <a href="@($"movies/details?id={movie.Id}")">Details</a> |
-       @*  <a href="@($"movies/delete?id={movie.Id}")">Delete</a> *@
-    </TemplateColumn>
+        <a href="@($"movies/delete?id={movie.Id}")">Delete</a>
+    </TemplateColumn> *@
 </QuickGrid>
 
 @code {
     private MoviesContext context = default!;
+    [SupplyParameterFromQuery]
+    string? TitleFilter { get; set; }
 
     protected override void OnInitialized()
     {
@@ -45,4 +45,6 @@
     }
 
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    IQueryable<Movie> FilteredMovies =>
+    context.Movie.Where(m => m.Title.Contains(TitleFilter ?? string.Empty));
 }
