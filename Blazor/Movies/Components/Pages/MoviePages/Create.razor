@@ -19,23 +19,24 @@
     <div class="col-md-4">
         <EditForm method="post" Model="Movie" OnValidSubmit="AddMovie" FormName="create" Enhance>
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert"/>
+            <ValidationSummary class="text-danger" role="alert" />
+
             <div class="mb-3">
-                <label for="title" class="form-label">Title:</label> 
-                <InputText id="title" @bind-Value="Movie.Title" class="form-control" /> 
-                <ValidationMessage For="() => Movie.Title" class="text-danger" /> 
-            </div>        
+                <label for="title" class="form-label">Title:</label>
+                <InputText id="title" @bind-Value="Movie.Title" class="form-control" />
+                <ValidationMessage For="() => Movie.Title" class="text-danger" />
+            </div>
             <div class="mb-3">
-                <label for="releasedate" class="form-label">ReleaseDate:</label> 
-                <InputDate id="releasedate" @bind-Value="Movie.ReleaseDate" class="form-control" /> 
-                <ValidationMessage For="() => Movie.ReleaseDate" class="text-danger" /> 
-            </div>        
+                <label for="releasedate" class="form-label">ReleaseDate:</label>
+                <InputDate id="releasedate" @bind-Value="Movie.ReleaseDate" class="form-control" />
+                <ValidationMessage For="() => Movie.ReleaseDate" class="text-danger" />
+            </div>
             <div class="mb-3">
-                <label for="genre" class="form-label">Genre:</label> 
-                <InputText id="genre" @bind-Value="Movie.Genre" class="form-control" /> 
-                <ValidationMessage For="() => Movie.Genre" class="text-danger" /> 
-            </div> 
-            
+                <label for="genre" class="form-label">Genre:</label>
+                <InputText id="genre" @bind-Value="Movie.Genre" class="form-control" />
+                <ValidationMessage For="() => Movie.Genre" class="text-danger" />
+            </div>
+
             <div class="mb-3">
                 <label for="URL" class="form-label">URL:</label>
                 <InputText id="URL" @bind-Value="Movie.URL" class="form-control" />
@@ -44,13 +45,17 @@
 
             <div class="mb-3">
                 <label for="brief" class="form-label">Brief:</label>
-                <InputText id="brief" @bind-Value="Movie.Brief" class="form-control" />
+                <InputTextArea id="brief" @bind-Value="Movie.Brief" class="form-control" /> @* Исправлено на InputTextArea для более длинного текста *@
                 <ValidationMessage For="() => Movie.Brief" class="text-danger" />
             </div>
 
             <div class="mb-3">
-                <label for="imagepath" class="form-label">Poster:</label>
-                <InputFile OnChange="LoadFiles" class="form-control" accept="image/*" />
+                <label for="posterFile" class="form-label">Poster:</label>
+                <InputFile id="posterFile" OnChange="OnPosterFileChange" class="form-control" accept="image/*" />
+                @if (previewImageUrl != null)
+                {
+                    <img src=Movie.PosterImage alt="Poster Preview" style="max-width: 200px; height: auto; margin-top: 10px;" />
+                }
             </div>
 
             <button type="submit" class="btn btn-primary">Create</button>
@@ -66,35 +71,108 @@
     [SupplyParameterFromForm]
     private Movie Movie { get; set; } = new();
 
-    private IBrowserFile? uploadedFile;
+    private IBrowserFile? selectedPosterFile;
+    private string? previewImageUrl; // Для предварительного просмотра
 
-    private void LoadFiles(InputFileChangeEventArgs e)
+    private void OnPosterFileChange(InputFileChangeEventArgs e)
     {
-        uploadedFile = e.File;
+        selectedPosterFile = e.File;
+        if (selectedPosterFile != null)
+        {
+            // Генерируем URL для предварительного просмотра
+            var ms = new MemoryStream();
+            selectedPosterFile.OpenReadStream(selectedPosterFile.Size).CopyTo(ms); // Копируем в MemoryStream
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            previewImageUrl = $"data:{selectedPosterFile.ContentType};base64,{base64}";
+        }
+        else
+        {
+            previewImageUrl = null;
+        }
+        StateHasChanged(); // Обновляем UI для отображения превью
     }
 
     private async Task AddMovie()
     {
-        if (uploadedFile != null)
+        // 1. Проверяем, что Movie объект не null.
+        if (Movie == null)
         {
-            // 1. Генерируем уникальное имя
-            string uploadsFolder = Path.Combine(Environment.WebRootPath, "movie_posters");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + uploadedFile.Name;
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            // 2. Сохраняем файл (ограничение размера 500kb по умолчанию в Blazor, можно увеличить в Program.cs)
-            await using FileStream fs = new(filePath, FileMode.Create);
-            await uploadedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5).CopyToAsync(fs);
-
-            // 3. Записываем путь в модель
-            Movie.Poster = "/movie_posters/" + uniqueFileName;
+            // Этого не должно произойти в Create, но для безопасности.
+            // Можно либо перейти на страницу ошибок, либо добавить новый Movie.
+            Movie = new Movie(); // Или NavigationManager.NavigateTo("errorpage");
         }
 
-        using var context = DbFactory.CreateDbContext();
-        context.Movie.Add(Movie);
-        await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/movies");
+        // 2. Обработка постера
+        if (selectedPosterFile != null)
+        {
+            try
+            {
+                // Проверяем, что размер файла больше 0.
+                if (selectedPosterFile.Size > 0)
+                {
+                    var buffer = new byte[selectedPosterFile.Size];
+                    await selectedPosterFile.OpenReadStream().ReadAsync(buffer);
+
+                    Movie.PosterImage = buffer;
+
+                    // Проверяем contentType перед присвоением.
+                    // Добавляем проверку на null для selectedPosterFile.ContentType
+                    Movie.PosterMimeType = selectedPosterFile.ContentType ?? "application/octet-stream";
+
+                    // Если contentType оказался некорректным, можно установить значение по умолчанию
+                    if (string.IsNullOrEmpty(Movie.PosterMimeType))
+                    {
+                        Movie.PosterMimeType = "application/octet-stream";
+                    }
+                }
+                else
+                {
+                    // Файл выбран, но он пустой. Обработаем как отсутствие файла.
+                    Movie.PosterImage = null;
+                    Movie.PosterMimeType = string.Empty; // или null
+                }
+            }
+            catch (Exception ex)
+            {
+                // Обработка возможных ошибок при чтении файла
+                // Например: log.LogError(ex, "Error reading poster file.");
+                // Можно уведомить пользователя об ошибке.
+                // В данном случае, если файл не прочитался, считаем, что постера нет.
+                Movie.PosterImage = null;
+                Movie.PosterMimeType = string.Empty; // или null
+
+                // Дополнительно: показать сообщение пользователю
+                // _toastService.ShowError($"Could not process image: {ex.Message}");
+            }
+        }
+        else
+        {
+            // Файл не был выбран. Убедимся, что PosterImage и PosterMimeType установлены в NULL или пусты.
+            Movie.PosterImage = null;
+            Movie.PosterMimeType = string.Empty; // или null
+        }
+
+        // 3. Добавление в базу данных
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.Movie.Add(Movie);
+            await context.SaveChangesAsync();
+            NavigationManager.NavigateTo("/movies");
+        }
+       
+        catch (DbUpdateException dbEx)
+        {
+            // Обработка ошибок при обновлении базы данных (например, конфликты)
+            // Log.Error(dbEx, "DB update error while adding movie");
+            // Show error message to user
+        }
+        catch (Exception ex)
+        {
+            // Обработка общих ошибок
+            // Log.Error(ex, "Unexpected error while adding movie");
+            // Show error message to user
+            // NavigationManager.NavigateTo("/error"); // Или другая страница ошибки
+        }
     }
 }

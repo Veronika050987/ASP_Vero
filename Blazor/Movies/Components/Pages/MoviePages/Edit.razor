@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.EntityFrameworkCore
 @using Movies.Models
+@using Microsoft.AspNetCore.Hosting
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject IWebHostEnvironment Environment
@@ -24,8 +25,40 @@ else
         <div class="col-md-4">
             <EditForm method="post" Model="Movie" OnValidSubmit="UpdateMovie" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
-                <ValidationSummary role="alert"/>
+                <ValidationSummary role="alert" />
                 <input type="hidden" name="Movie.Id" value="@Movie.Id" />
+
+                @* Отображение текущего изображения, если оно есть *@
+                <div class="mb-3">
+                    <label>Current Poster:</label><br />
+                    @if (Movie.PosterImage != null && Movie.PosterImage.Length > 0)
+                    {
+                        var base64 = Convert.ToBase64String(Movie.PosterImage);
+                        // Обеспечиваем, что PosterMimeType не null и имеет значение по умолчанию
+                        var mimeType = !string.IsNullOrEmpty(Movie.PosterMimeType) ? Movie.PosterMimeType : "application/octet-stream";
+                        var imgTag = $"data:{mimeType};base64,{base64}";
+                        <img src="" alt="Current Poster" style="max-width: 200px; height: auto;" />
+                        <br />
+                    }
+                    else
+                    {
+                        <span>No current poster available.</span>
+                        <br />
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label for="posterFile" class="form-label">Change Poster (optional):</label>
+                    <InputFile id="posterFile" OnChange="OnPosterFileChange" class="form-control" accept="image/*" />
+                    @* Предварительный просмотр нового выбранного изображения *@
+                    @if (!string.IsNullOrEmpty(previewImageUrl))
+                    {
+                        <p>Preview of new image:</p>
+                        <img src=Movie.PosterImage alt="New Poster Preview" style="max-width: 200px; height: auto; margin-top: 10px;" />
+                        <br />
+                    }
+                </div>
+
                 <div class="mb-3">
                     <label for="title" class="form-label">Title:</label>
                     <InputText id="title" @bind-Value="Movie.Title" class="form-control" />
@@ -42,26 +75,16 @@ else
                     <ValidationMessage For="() => Movie.Genre" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="genre" class="form-label">URL:</label>
-                    <InputText id="genre" @bind-Value="Movie.URL" class="form-control" />
+                    <label for="url" class="form-label">URL:</label>
+                    <InputText id="url" @bind-Value="Movie.URL" class="form-control" />
                     <ValidationMessage For="() => Movie.URL" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="brief" class="form-label">Brief:</label>
-                    <InputText id="brief" @bind-Value="Movie.Brief" class="form-control" />
+                    <InputTextArea id="brief" @bind-Value="Movie.Brief" class="form-control" />
                     <ValidationMessage For="() => Movie.Brief" class="text-danger" />
                 </div>
-                <div class="mb-3">
-                    <label>Current Poster:</label><br />
-                    @if (!string.IsNullOrEmpty(Movie.Poster))
-                    {
-                        <img src="" style="max-width: 200px;" />
-                
-                        <br />
-                    }
-                    <label for="imagefile" class="form-label">Change Poster:</label>
-                    <InputFile id="imagefile" OnChange="LoadFiles" class="form-control" accept="image/*" />
-                </div>
+
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
         </div>
@@ -79,14 +102,14 @@ else
     [SupplyParameterFromForm]
     private Movie? Movie { get; set; }
 
-    private IBrowserFile? uploadedFile;
-
-    // Инъекция Environment добавлена вверху @inject IWebHostEnvironment Environment
+    private IBrowserFile? selectedPosterFile; // Для хранения нового выбранного файла
+    private string? previewImageUrl; // Для предварительного просмотра нового изображения
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        Movie ??= await context.Movie.FirstOrDefaultAsync(m => m.Id == Id);
+        // Загружаем Movie, включая PosterImage и PosterMimeType
+        Movie = await context.Movie.FindAsync(Id);
 
         if (Movie is null)
         {
@@ -94,46 +117,77 @@ else
         }
     }
 
-    private void LoadFiles(InputFileChangeEventArgs e)
+    private void OnPosterFileChange(InputFileChangeEventArgs e)
     {
-        uploadedFile = e.File;
+        selectedPosterFile = e.File;
+        if (selectedPosterFile != null)
+        {
+            try
+            {
+                var ms = new MemoryStream();
+                selectedPosterFile.OpenReadStream(selectedPosterFile.Size).CopyTo(ms);
+                var base64 = Convert.ToBase64String(ms.ToArray());
+                // Используем ContentType для формирования Data URL
+                previewImageUrl = $"data:{selectedPosterFile.ContentType ?? "application/octet-stream"};base64,{base64}";
+            }
+            catch (Exception ex)
+            {
+                // Обработка ошибки при чтении файла для превью
+                previewImageUrl = null;
+                // Log.Error(ex, "Error creating preview image.");
+            }
+        }
+        else
+        {
+            previewImageUrl = null;
+        }
+        StateHasChanged(); // Обновляем UI для отображения превью
     }
 
     private async Task UpdateMovie()
     {
-        if (uploadedFile != null)
+        if (Movie is null) return;
+
+        if (selectedPosterFile != null)
         {
-            // 1. Создаем папку, если нет
-            string uploadsFolder = Path.Combine(Environment.WebRootPath, "movie_posters");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
-
-            // 2. Генерируем имя и сохраняем
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + uploadedFile.Name;
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            await using FileStream fs = new(filePath, FileMode.Create);
-            await uploadedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 5).CopyToAsync(fs);
-
-            // 3. Удаляем старый файл, если он был (опционально)
-            if (!string.IsNullOrEmpty(Movie.Poster))
+            try
             {
-                var oldFilePath = Path.Combine(Environment.WebRootPath, Movie.Poster.TrimStart('/'));
-                if (File.Exists(oldFilePath)) File.Delete(oldFilePath);
+                // Проверяем, что файл не пустой
+                if (selectedPosterFile.Size > 0)
+                {
+                    var buffer = new byte[selectedPosterFile.Size];
+                    await selectedPosterFile.OpenReadStream().ReadAsync(buffer);
+
+                    Movie.PosterImage = buffer;
+                    // Обеспечиваем, что PosterMimeType не null
+                    Movie.PosterMimeType = selectedPosterFile.ContentType ?? "application/octet-stream";
+                    if (string.IsNullOrEmpty(Movie.PosterMimeType))
+                    {
+                        Movie.PosterMimeType = "application/octet-stream";
+                    }
+                }
+                else
+                {
+                    // Если выбранный файл пустой, считаем, что пользователь не выбрал новое изображение.
+                    // Старое изображение остается без изменений.
+                    // Ничего не делаем, если selectedPosterFile.Size == 0.
+                }
             }
-
-            // 4. Обновляем путь в модели
-            Movie.Poster = "/movie_posters/" + uniqueFileName;
+            catch (Exception ex)
+            {
+                // Обработка ошибки при чтении файла для сохранения
+                // Log.Error(ex, "Error reading poster file for update.");
+                // Откатываем изменения для постера, если произошла ошибка
+                // Можно вернуть старое значение, если оно было загружено
+                // Если Movie.PosterImage был null, он останется null.
+                // Если он был с данными, эти данные не будут обновлены.
+            }
         }
+        // Если selectedPosterFile == null, старое изображение остается без изменений.
 
         using var context = DbFactory.CreateDbContext();
-        context.Attach(Movie!).State = EntityState.Modified;
+        context.Attach(Movie).State = EntityState.Modified;
         await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/movies");
-    }
-
-    private bool MovieExists(int id)
-    {
-        using var context = DbFactory.CreateDbContext();
-        return context.Movie.Any(e => e.Id == id);
+        NavigationManager.NavigateTo($"/movies/details?id={Id}"); // Перенаправляем на страницу деталей
     }
 }

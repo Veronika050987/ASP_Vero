@@ -19,6 +19,12 @@ namespace Movies.Models
 
 		public string? Brief { get; set; }
 
-		public string? Poster { get; set; }
+		//public string? Poster { get; set; }
+
+		public byte[]? PosterImage { get; set; }
+
+		//Добавлено для хранения MIME-типа изображения (например, image/jpeg, image/png).
+		[StringLength(50)]
+		public string? PosterMimeType { get; set; }
 	}
 }
