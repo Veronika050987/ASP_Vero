@@ -37,7 +37,7 @@ else
                         // Обеспечиваем, что PosterMimeType не null и имеет значение по умолчанию
                         var mimeType = !string.IsNullOrEmpty(Movie.PosterMimeType) ? Movie.PosterMimeType : "application/octet-stream";
                         var imgTag = $"data:{mimeType};base64,{base64}";
-                        <img src="" alt="Current Poster" style="max-width: 200px; height: auto;" />
+                        <img src=buffer alt="Current Poster" style="max-width: 200px; height: auto;" />
                         <br />
                     }
                     else
@@ -54,7 +54,7 @@ else
                     @if (!string.IsNullOrEmpty(previewImageUrl))
                     {
                         <p>Preview of new image:</p>
-                        <img src=Movie.PosterImage alt="New Poster Preview" style="max-width: 200px; height: auto; margin-top: 10px;" />
+                        <img src=buffer alt="New Poster Preview" style="max-width: 200px; height: auto; margin-top: 10px;" />
                         <br />
                     }
                 </div>

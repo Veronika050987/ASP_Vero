@@ -41,7 +41,7 @@ else
                         // Обеспечиваем, что PosterMimeType не null и имеет значение по умолчанию
                         var mimeType = !string.IsNullOrEmpty(movie.PosterMimeType) ? movie.PosterMimeType : "application/octet-stream";
                         var imgTag = $"data:{mimeType};base64,{base64}";
-                            <img src=Movie.PosterImage alt="Poster" style="max-width: 300px; height: auto;" />
+                            <img src=buffer alt="Poster" style="max-width: 300px; height: auto;" />
                     }
                     else
                     {
