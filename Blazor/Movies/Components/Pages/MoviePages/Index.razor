@@ -1,4 +1,5 @@
 ﻿@page "/movies"
+@rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using Movies.Models
@@ -14,37 +15,60 @@
     <a href="movies/create">Create New</a>
 </p>
 
-<div>
-    <form action="/movies" data-enhance>
-        <input type="search" name="titleFilter" />
-        <input type="submit" value="Search" />
-    </form>
+<div class="controls">
+	<form action="/movies" data-enhance>
+		<input type="search" name="titleFilter" />
+		<input type="submit" value="Search" />
+	</form>
+	<div>
+		<label for="items-per-page">Items per page: </label>
+		<select id="items-per-page" @bind="pagination.ItemsPerPage">
+			<option value="3">3</option>
+			<option value="5">5</option>
+			<option value="8">8</option>
+			<option value="10">10</option>
+		</select>
+	</div>
 </div>
 
-<QuickGrid Class="table" Items="FilteredMovies">
-    @* <PropertyColumn Property="movie => movie.Title" ></PropertyColumn> *@
-    <TemplateColumn Title="Title"><a href="@($"movies/details?id={context.Id}")">@context.Title</a></TemplateColumn>
-    <PropertyColumn Property="movie => movie.ReleaseDate" />
-    <PropertyColumn Property="movie => movie.Genre" />
+<div>
+	<QuickGrid Class="table" Items="FilteredMovies" Pagination="pagination">
+		@* <PropertyColumn Sortable="true" Property="movie => movie.Title" ></PropertyColumn> *@
+		<TemplateColumn Title="Title"
+						Class="movie-title"
+						Sortable="true"
+						InitialSortDirection="SortDirection.Ascending"
+						IsDefaultSortColumn="true"
+						SortBy="sortBy">
+			<a href="@($"movies/details?id={context.Id}")">@context.Title</a>
+		</TemplateColumn>
+		<PropertyColumn Class="release-date" Sortable="true" Property="movie => movie.ReleaseDate" />
+		<PropertyColumn Class="genre" Sortable="true" Property="movie => movie.Genre" />
 
-    @* <TemplateColumn Context="movie">
-        <a href="@($"movies/edit?id={movie.Id}")">Edit</a> |
-        <a href="@($"movies/details?id={movie.Id}")">Details</a> |
-        <a href="@($"movies/delete?id={movie.Id}")">Delete</a>
-    </TemplateColumn> *@
-</QuickGrid>
+
+		@* <TemplateColumn Context="movie">
+		<a href="@($"movies/edit?id={movie.Id}")">Edit</a> |
+		<a href="@($"movies/details?id={movie.Id}")">Details</a> |
+		<a href="@($"movies/delete?id={movie.Id}")">Delete</a>
+		</TemplateColumn> *@
+	</QuickGrid>
+	<Paginator State="pagination" />
+</div>
 
 @code {
-    private MoviesContext context = default!;
-    [SupplyParameterFromQuery]
-    string? TitleFilter { get; set; }
+	private MoviesContext context = default!;
+	[SupplyParameterFromQuery]
+	string? TitleFilter { get; set; }
+	GridSort<Movie> sortBy = GridSort<Movie>.ByAscending(p => p.Title);
 
-    protected override void OnInitialized()
-    {
-        context = DbFactory.CreateDbContext();
-    }
+	PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
-    IQueryable<Movie> FilteredMovies =>
-    context.Movie.Where(m => m.Title.Contains(TitleFilter ?? string.Empty));
+	protected override void OnInitialized()
+	{
+		context = DbFactory.CreateDbContext();
+	}
+
+	public async ValueTask DisposeAsync() => await context.DisposeAsync();
+	IQueryable<Movie> FilteredMovies =>
+	context.Movie.Where(m => m.Title.Contains(TitleFilter ?? string.Empty));
 }

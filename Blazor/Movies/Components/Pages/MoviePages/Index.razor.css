@@ -1,0 +1,18 @@
+﻿.controls {
+    display: flex;
+    justify-content: space-between;
+}
+
+    .controls select {
+        width: 48px;
+        height: 25px;
+    }
+/*https://stackoverflow.com/questions/77852983/blazor-quickgrid-column-width-how-to-set*/
+::deep .movie-title {
+    width: 50%;
+}
+
+::deep .release-date, .genre {
+    width: 25%;
+    /*width: 350px;*/
+}
