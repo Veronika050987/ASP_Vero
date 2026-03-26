@@ -49,3 +49,102 @@ h1:focus {
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
 }
+/* --- Светлая Тема (по умолчанию) --- */
+:root {
+    --background-color: #ffffff;
+    --text-color: #333333;
+    --primary-button-background: #007bff;
+    --primary-button-text: #ffffff;
+    --input-background: #f8f9fa;
+    --input-border: #ced4da;
+    --label-color: #212529;
+    --link-color: #007bff;
+    --link-hover-color: #0056b3;
+    --hr-border: #dee2e6;
+    --validation-message-color: #dc3545;
+    --header-color: #343a40;
+    --navigation-link-color: #0d6efd;
+    --navigation-link-hover-color: #0b5ed7;
+    --navigation-link-active-color: #0a58ca;
+}
+
+/* --- Темная Тема --- */
+.dark-theme {
+    --background-color: #222222;
+    --text-color: #dddddd;
+    --primary-button-background: #0d6efd; /* Можно оставить тем же или изменить */
+    --primary-button-text: #ffffff;
+    --input-background: #333333;
+    --input-border: #555555;
+    --label-color: #eeeeee;
+    --link-color: #0d6efd; /* Можно оставить тем же или изменить */
+    --link-hover-color: #0b5ed7;
+    --hr-border: #444444;
+    --validation-message-color: #dc3545; /* Можно оставить тем же */
+    --header-color: #cccccc;
+    --navigation-link-color: #0d6efd;
+    --navigation-link-hover-color: #0b5ed7;
+    --navigation-link-active-color: #0a58ca;
+}
+
+/* Применяем CSS переменные к основным элементам */
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s; /* Плавный переход */
+}
+
+h1, h2 {
+    color: var(--header-color);
+}
+
+hr {
+    border-color: var(--hr-border);
+}
+
+.btn-primary {
+    background-color: var(--primary-button-background);
+    color: var(--primary-button-text);
+    border-color: var(--primary-button-background);
+}
+
+    .btn-primary:hover {
+        background-color: var(--link-hover-color);
+        border-color: var(--link-hover-color);
+    }
+
+.form-label {
+    color: var(--label-color);
+}
+
+.form-control {
+    background-color: var(--input-background);
+    color: var(--text-color);
+    border: 1px solid var(--input-border);
+}
+
+.text-danger {
+    color: var(--validation-message-color);
+}
+
+a {
+    color: var(--link-color);
+}
+
+    a:hover {
+        color: var(--link-hover-color);
+    }
+
+/* Добавьте правила для элементов навигации, если они используются */
+.navbar-brand, .nav-link {
+    color: var(--navigation-link-color);
+}
+
+    .nav-link:hover {
+        color: var(--navigation-link-hover-color);
+    }
+
+    .nav-link.active {
+        color: var(--navigation-link-active-color);
+        font-weight: bold;
+    }
