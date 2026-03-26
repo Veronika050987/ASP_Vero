@@ -7,7 +7,7 @@
 @inject NavigationManager NavigationManager
 @inject IWebHostEnvironment Environment
 
-@rendermode InteractiveServer
+@* @rendermode InteractiveServer *@
 
 <PageTitle>Create</PageTitle>
 
@@ -45,7 +45,7 @@
 
             <div class="mb-3">
                 <label for="brief" class="form-label">Brief:</label>
-                <InputTextArea id="brief" @bind-Value="Movie.Brief" class="form-control" /> @* Исправлено на InputTextArea для более длинного текста *@
+                <InputTextArea id="brief" @bind-Value="Movie.Brief" class="form-control" />
                 <ValidationMessage For="() => Movie.Brief" class="text-danger" />
             </div>
 
@@ -54,7 +54,7 @@
                 <InputFile id="posterFile" OnChange="OnPosterFileChange" class="form-control" accept="image/*" />
                 @if (previewImageUrl != null)
                 {
-                    <img src=buffer alt="Poster Preview" style="max-width: 200px; height: auto; margin-top: 10px;" />
+                    <img src=previewImageUrl alt="Poster Preview" style="max-width: 200px; height: auto; margin-top: 10px;" />
                 }
             </div>
 
@@ -72,87 +72,62 @@
     private Movie Movie { get; set; } = new();
 
     private IBrowserFile? selectedPosterFile;
-    private string? previewImageUrl; // Для предварительного просмотра
 
-    private void OnPosterFileChange(InputFileChangeEventArgs e)
+    private string? previewImageUrl; // Для предварительного просмотра
+    private byte[]? posterImageBytes; // Для хранения байт изображения
+
+    private async Task OnPosterFileChange(InputFileChangeEventArgs e)
     {
         selectedPosterFile = e.File;
         if (selectedPosterFile != null)
         {
-            // Генерируем URL для предварительного просмотра
-            var ms = new MemoryStream();
-            selectedPosterFile.OpenReadStream(selectedPosterFile.Size).CopyTo(ms); // Копируем в MemoryStream
-            var base64 = Convert.ToBase64String(ms.ToArray());
-            previewImageUrl = $"data:{selectedPosterFile.ContentType};base64,{base64}";
+            using var ms = new MemoryStream();
+            await selectedPosterFile.OpenReadStream(selectedPosterFile.Size).CopyToAsync(ms);
+            posterImageBytes = ms.ToArray(); // Сохраняем байты
+            previewImageUrl = $"data:{selectedPosterFile.ContentType};base64,{Convert.ToBase64String(posterImageBytes)}";
         }
         else
         {
             previewImageUrl = null;
+            posterImageBytes = null;
         }
         StateHasChanged(); // Обновляем UI для отображения превью
     }
 
     private async Task AddMovie()
     {
-        // 1. Проверяем, что Movie объект не null.
         if (Movie == null)
         {
-            // Этого не должно произойти в Create, но для безопасности.
-            // Можно либо перейти на страницу ошибок, либо добавить новый Movie.
-            Movie = new Movie(); // Или NavigationManager.NavigateTo("errorpage");
+            Movie = new Movie();
         }
 
-        // 2. Обработка постера
-        if (selectedPosterFile != null)
+        // Обработка постера
+        if (posterImageBytes != null && selectedPosterFile != null) // Используем posterImageBytes
         {
             try
             {
-                // Проверяем, что размер файла больше 0.
-                if (selectedPosterFile.Size > 0)
+                Movie.PosterImage = posterImageBytes;
+                Movie.PosterMimeType = selectedPosterFile.ContentType ?? "application/octet-stream";
+                if (string.IsNullOrEmpty(Movie.PosterMimeType))
                 {
-                    var buffer = new byte[selectedPosterFile.Size];
-                    await selectedPosterFile.OpenReadStream().ReadAsync(buffer);
-
-                    Movie.PosterImage = buffer;
-
-                    // Проверяем contentType перед присвоением.
-                    // Добавляем проверку на null для selectedPosterFile.ContentType
-                    Movie.PosterMimeType = selectedPosterFile.ContentType ?? "application/octet-stream";
-
-                    // Если contentType оказался некорректным, можно установить значение по умолчанию
-                    if (string.IsNullOrEmpty(Movie.PosterMimeType))
-                    {
-                        Movie.PosterMimeType = "application/octet-stream";
-                    }
-                }
-                else
-                {
-                    // Файл выбран, но он пустой. Обработаем как отсутствие файла.
-                    Movie.PosterImage = null;
-                    Movie.PosterMimeType = string.Empty; // или null
+                    Movie.PosterMimeType = "application/octet-stream";
                 }
             }
             catch (Exception ex)
             {
-                // Обработка возможных ошибок при чтении файла
-                // Например: log.LogError(ex, "Error reading poster file.");
-                // Можно уведомить пользователя об ошибке.
-                // В данном случае, если файл не прочитался, считаем, что постера нет.
+                // Логирование ошибки или показ сообщения пользователю
                 Movie.PosterImage = null;
-                Movie.PosterMimeType = string.Empty; // или null
-
-                // Дополнительно: показать сообщение пользователю
-                // _toastService.ShowError($"Could not process image: {ex.Message}");
+                Movie.PosterMimeType = string.Empty;
             }
         }
         else
         {
-            // Файл не был выбран. Убедимся, что PosterImage и PosterMimeType установлены в NULL или пусты.
+            // Файл не был выбран или возникла ошибка при чтении
             Movie.PosterImage = null;
-            Movie.PosterMimeType = string.Empty; // или null
+            Movie.PosterMimeType = string.Empty;
         }
 
-        // 3. Добавление в базу данных
+        // Добавление в базу данных
         try
         {
             using var context = DbFactory.CreateDbContext();
@@ -160,10 +135,9 @@
             await context.SaveChangesAsync();
             NavigationManager.NavigateTo("/movies");
         }
-       
         catch (DbUpdateException dbEx)
         {
-            // Обработка ошибок при обновлении базы данных (например, конфликты)
+            // Обработка ошибок при обновлении базы данных
             // Log.Error(dbEx, "DB update error while adding movie");
             // Show error message to user
         }
@@ -172,7 +146,6 @@
             // Обработка общих ошибок
             // Log.Error(ex, "Unexpected error while adding movie");
             // Show error message to user
-            // NavigationManager.NavigateTo("/error"); // Или другая страница ошибки
         }
     }
 }
