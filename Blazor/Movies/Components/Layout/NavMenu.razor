@@ -4,46 +4,47 @@
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        @* Заголовок приложения *@
         <a class="navbar-brand" href="">Movies</a>
 
-        @* Кнопка переключения тем *@
         <button class="btn btn-outline-secondary btn-sm me-3 theme-toggle-button" @onclick="ToggleTheme">
             @if (ThemeService.IsDarkMode)
             {
-                <i class="bi bi-sun-fill"></i> @* Иконка солнца для темной темы *@
+                <i class="bi bi-sun-fill"></i>
             }
             else
             {
-                <i class="bi bi-moon-stars-fill"></i> @* Иконка луны для светлой темы *@
+                <i class="bi bi-moon-stars-fill"></i>
             }
         </button>
 
-        @* Элемент для мобильного меню, если нужен *@
         <input type="checkbox" title="Navigation menu" class="navbar-toggler" id="nav-toggler" />
         <label for="nav-toggler" class="navbar-toggler-icon"></label>
     </div>
 </div>
 
-@* Основное навигационное меню *@
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()"> @* Оставим для мобильного поведения *@
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <i class="bi bi-house-door-fill"></i> Home
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="counter">
-                <i class="bi bi-plus-square-fill"></i> Counter
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            @* Изменено: добавлено SVG с применением CSS переменных *@
             <NavLink class="nav-link" href="movies">
-                <img src="" alt="Movies Icon" class="nav-link-icon" /> Movies
+                <img src="svg/cinema.svg" alt="Icon" style="width: 20px; height: 20px;" /> Movies
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="weather">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
             </NavLink>
         </div>
     </nav>

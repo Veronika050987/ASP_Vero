@@ -7,38 +7,33 @@ using Movies.Components.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor().AddCircuitOptions(options =>
-{
-	options.DetailedErrors = true;
-});
+builder.Services.AddRazorComponents()
+	.AddInteractiveServerComponents(); // Включает интерактивность (кнопки, состояния)
+
+// 2. Регистрация вашего сервиса тем
+builder.Services.AddScoped<ThemeService>();
+
+// 3. Регистрация БД (если используете EF Core)
 builder.Services.AddDbContextFactory<MoviesContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Регистрируем ThemeService
-builder.Services.AddScoped<ThemeService>(); // Или AddSingleton, или AddTransient, в зависимости от ваших нужд, но Scoped - хороший выбор для тем.
-
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 4. Настройка HTTP-конвейера
 if (!app.Environment.IsDevelopment())
 {
 	app.UseExceptionHandler("/Error", createScopeForErrors: true);
-	// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
 	app.UseHsts();
-    app.UseMigrationsEndPoint();
 }
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
+app.UseStaticFiles(); // Нужно для css, js, картинок в wwwroot
+app.UseAntiforgery(); // Обязательно для .NET 8
 
-app.UseRouting();
-
-app.MapBlazorHub();
-
-// !!! Вот ключевая строка для исправления ошибки !!!
-app.MapFallbackToPage("/_Host"); // <-- Указываем на _Host.cshtml в папке Pages
+// 5. Маршрутизация компонентов
+// App - это ваш главный компонент App.razor, который находится в корне
+app.MapRazorComponents<Movies.App>()
+	.AddInteractiveServerRenderMode();
 
 app.Run();
