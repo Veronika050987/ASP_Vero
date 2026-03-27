@@ -6,7 +6,12 @@ using Movies.Data;
 using Movies.Components.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContextFactory<MoviesContext>(options =>
+	options.UseSqlServer(builder.Configuration.GetConnectionString("MoviesContext") ?? throw new InvalidOperationException("Connection string 'MoviesContext' not found.")));
 
+builder.Services.AddQuickGridEntityFrameworkAdapter();
+
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents(); // Включает интерактивность (кнопки, состояния)
 
@@ -24,12 +29,13 @@ if (!app.Environment.IsDevelopment())
 {
 	app.UseExceptionHandler("/Error", createScopeForErrors: true);
 	app.UseHsts();
+	app.UseMigrationsEndPoint();
 }
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles(); // Нужно для css, js, картинок в wwwroot
-app.UseAntiforgery(); // Обязательно для .NET 8
+app.UseStaticFiles();
+app.UseAntiforgery();
 
 // 5. Маршрутизация компонентов
 // App - это ваш главный компонент App.razor, который находится в корне
