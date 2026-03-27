@@ -2,24 +2,17 @@
 @using Movies.Components.Services
 @inject ThemeService ThemeService
 @rendermode InteractiveServer
+@implements IDisposable
+@inject ThemeService ThemeService
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Movies</a>
 
-        <button class="btn btn-outline-secondary btn-sm me-3 theme-toggle-button" @onclick="ToggleTheme">
-            @if (ThemeService.IsDarkMode)
-            {
-                <i class="bi bi-sun-fill"></i>
-            }
-            else
-            {
-                <i class="bi bi-moon-stars-fill"></i>
-            }
+        <button @onclick="ToggleTheme">
+            @(ThemeService.IsDarkMode ? "🌙" : "☀️")
         </button>
 
-        <input type="checkbox" title="Navigation menu" class="navbar-toggler" id="nav-toggler" />
-        <label for="nav-toggler" class="navbar-toggler-icon"></label>
     </div>
 </div>
 
@@ -52,11 +45,20 @@
 </div>
 
 @code {
-    private void ToggleTheme()
+    protected override void OnInitialized()
     {
-        ThemeService.ToggleTheme();
-        // Перезагрузка страницы необходима, чтобы CSS переменные применились глобально.
-        // Если у вас более сложная система тем, может потребоваться другой подход.
-        NavigationManager.NavigateTo(NavigationManager.Uri, true);
+        // Подписываемся на изменения
+        ThemeService.OnChange += StateHasChanged;
+    }
+
+    private async Task ToggleTheme()
+    {
+        await ThemeService.ToggleThemeAsync();
+    }
+
+    public void Dispose()
+    {
+        // Обязательно отписываемся!
+        ThemeService.OnChange -= StateHasChanged;
     }
 }

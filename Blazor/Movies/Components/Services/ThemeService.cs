@@ -7,19 +7,9 @@ namespace Movies.Components.Services
 		private bool _isDarkMode = false;
 		private readonly IJSRuntime _jsRuntime;
 
-		public bool IsDarkMode
-		{
-			get => _isDarkMode;
-			set
-			{
-				if (_isDarkMode != value)
-				{
-					_isDarkMode = value;
-					ApplyTheme();
-				}
-			}
-		}
+		public event Action? OnChange;
 
+		public bool IsDarkMode => _isDarkMode;
 		public ThemeService(IJSRuntime jsRuntime)
 		{
 			_jsRuntime = jsRuntime;
@@ -27,36 +17,24 @@ namespace Movies.Components.Services
 
 		public async Task InitializeThemeAsync()
 		{
-			// Попробуйте загрузить тему из localStorage, если она там есть
 			var storedTheme = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "theme");
-			if (storedTheme == "dark")
-			{
-				IsDarkMode = true;
-			}
-			else
-			{
-				IsDarkMode = false;
-			}
-			ApplyTheme(); // Применяем начальную тему
+			_isDarkMode = (storedTheme == "dark");
+			await ApplyTheme();
+			OnChange?.Invoke(); // Уведомляем UI
+		}
+
+		public async Task ToggleThemeAsync()
+		{
+			_isDarkMode = !_isDarkMode;
+			await ApplyTheme();
+			OnChange?.Invoke(); // Уведомляем UI
 		}
 
 		private async Task ApplyTheme()
 		{
-			if (_isDarkMode)
-			{
-				await _jsRuntime.InvokeVoidAsync("document.body.classList.add", "dark-theme");
-				await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "theme", "dark");
-			}
-			else
-			{
-				await _jsRuntime.InvokeVoidAsync("document.body.classList.remove", "dark-theme");
-				await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "theme", "light");
-			}
-		}
-
-		public void ToggleTheme()
-		{
-			IsDarkMode = !_isDarkMode;
+			// Здесь используем JS, чтобы изменить класс у body
+			await _jsRuntime.InvokeVoidAsync("document.body.classList.toggle", "dark-theme", _isDarkMode);
+			await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "theme", _isDarkMode ? "dark" : "light");
 		}
 	}
 }
