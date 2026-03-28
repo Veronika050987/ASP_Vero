@@ -38,7 +38,15 @@
 @code {
     [SupplyParameterFromForm]
     private Direction Direction { get; set; } = new();
-
+    protected override void OnInitialized()
+    {
+        // base.OnInitialized();
+        using (Academy.Data.AcademyContext context = DbFactory.CreateDbContext())
+        {
+            ID = context.Directions.Max(d => d.direction_id) + 1;
+        }
+    }
+   
     int id;
     int ID
     {

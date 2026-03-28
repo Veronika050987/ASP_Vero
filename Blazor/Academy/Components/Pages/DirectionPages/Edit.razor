@@ -3,6 +3,7 @@
 @using Academy.Models
 @inject IDbContextFactory<Academy.Data.AcademyContext> DbFactory
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -21,7 +22,8 @@ else
             <EditForm method="post" Model="Direction" OnValidSubmit="UpdateDirection" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
                 <ValidationSummary role="alert"/>
-                <input type="hidden" name="Direction.direction_id" value="@Direction.direction_id" />
+				<h4>ID: @Direction.direction_id </h4>
+                @* <input type="number" name="Direction.direction_id" value="@Direction.direction_id" /> *@
                 <div class="mb-3">
                     <label for="direction_name" class="form-label">direction_name:</label>
                     <InputText id="direction_name" @bind-Value="Direction.direction_name" class="form-control" />
@@ -39,7 +41,7 @@ else
 
 @code {
     [SupplyParameterFromQuery]
-    private byte direction_id { get; set; }
+    private int direction_id { get; set; }
 
     [SupplyParameterFromForm]
     private Direction? Direction { get; set; }
