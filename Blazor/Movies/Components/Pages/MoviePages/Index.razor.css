@@ -8,11 +8,17 @@
         height: 25px;
     }
 /*https://stackoverflow.com/questions/77852983/blazor-quickgrid-column-width-how-to-set*/
+
 ::deep .movie-title {
     width: 50%;
+    color: #4682B4;
 }
 
-::deep .release-date, .genre {
+::deep .release-date{
     width: 25%;
+    color: #4682B4;
     /*width: 350px;*/
+}
+::deep .genre {
+    color: #4682B4;
 }
