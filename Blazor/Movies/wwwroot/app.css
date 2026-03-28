@@ -67,27 +67,46 @@ h1:focus {
     --navigation-link-color: #0d6efd;
     --navigation-link-hover-color: #0b5ed7;
     --navigation-link-active-color: #0a58ca;
+    --header-title-c: #004a99;
+    --header-release-c: #006622;
+    --header-genre-c: #551a8b;
 }
 
 /* --- Темная Тема --- */
 .dark-theme {
     --background-color: #222222;
     --text-color: #dddddd;
-    --primary-button-background: #0d6efd; /* Можно оставить тем же или изменить */
+    --primary-button-background: #0d6efd;
     --primary-button-text: #ffffff;
     --input-background: #333333;
     --input-border: #555555;
     --label-color: #eeeeee;
-    --link-color: #0d6efd; /* Можно оставить тем же или изменить */
+    --link-color: #0d6efd;
     --link-hover-color: #0b5ed7;
     --hr-border: #444444;
-    --validation-message-color: #dc3545; /* Можно оставить тем же */
+    --validation-message-color: #dc3545;
     --header-color: #cccccc;
     --navigation-link-color: #0d6efd;
     --navigation-link-hover-color: #0b5ed7;
     --navigation-link-active-color: #0a58ca;
+    --header-title-c: #66b3ff;
+    --header-release-c: #66ff99;
+    --header-genre-c: #d1aaff;
+}
+.table th.movie-title button {
+    color: var(--header-title-c) !important;
+    font-weight: bold;
 }
 
+.table th.release-date button {
+    color: var(--header-release-c) !important;
+    font-weight: bold;
+}
+
+.table th.genre button {
+    color: var(--header-genre-c) !important;
+    font-weight: bold;
+}
 /* Применяем CSS переменные к основным элементам */
 body {
     background-color: var(--background-color);
