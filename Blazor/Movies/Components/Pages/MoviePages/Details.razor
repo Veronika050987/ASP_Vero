@@ -1,9 +1,10 @@
 ﻿@page "/movies/details"
 @using Microsoft.EntityFrameworkCore
 @using Movies.Models
-@using System.IO // Для MemoryStream
+@using System.IO
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 <PageTitle>Details</PageTitle>
 
@@ -28,12 +29,11 @@
                 </dl>
             </div>
             <div style="flex: 1; text-align: center;">
-                @if (movie.PosterImage != null && movie.PosterImage.Length > 0)
+                @if (movie.PosterImage != null && movie.PosterImage.Length > 0 && !string.IsNullOrEmpty(movie.PosterMimeType))
                 {
-                    // Преобразуем byte[] в Base64 строку для отображения в src
                     var posterBase64 = Convert.ToBase64String(movie.PosterImage);
-                    // Используем data URI схему для встраивания изображения
-                    <img src="" alt="Poster" style="max-width: 100%; max-height: 300px; object-fit: contain;" />
+                    var dataUrl = $"data:{movie.PosterMimeType};base64,{posterBase64}";
+                    <img src="@dataUrl" alt="Poster" style="max-width: 100%; max-height: 300px; object-fit: contain;" />
                 }
                 else
                 {

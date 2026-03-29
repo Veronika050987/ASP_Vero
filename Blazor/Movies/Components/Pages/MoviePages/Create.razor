@@ -3,7 +3,8 @@
 @using Movies.Models
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
-@using Microsoft.AspNetCore.Components.Forms // Необходимо для InputFile
+@using Microsoft.AspNetCore.Components.Forms
+@rendermode InteractiveServer
 
 <PageTitle>Create</PageTitle>
 
@@ -62,6 +63,7 @@
 @code {
     [SupplyParameterFromForm]
     private Movie Movie { get; set; } = new();
+    private bool _newPosterUploaded = false;
 
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddMovie()
@@ -78,12 +80,11 @@
 
         if (file != null)
         {
-            // Ограничиваем размер файла, если необходимо
             const long maxFileSize = 1024 * 1024 * 5; // 5 MB
             if (file.Size > maxFileSize)
             {
-                // Обработка ошибки: файл слишком большой
-                // Можно добавить в ValidationMessage или вывести сообщение пользователю
+                Console.WriteLine($"File size too large: {file.Size}");
+                // Здесь нужна обработка ошибки, например, добавить в ValidationMessage
                 return;
             }
 
@@ -91,20 +92,30 @@
             {
                 await file.OpenReadStream().CopyToAsync(memoryStream);
                 Movie.PosterImage = memoryStream.ToArray();
+                // Получаем MIME-тип файла.
+                // В ASP.NET Core.Components.Forms FileInfo объект сам по себе не хранит MIME-тип.
+                // Для надежности, вам может потребоваться библиотека для определения MIME-типа по содержимому файла,
+                // или полагаться на расширение файла.
+                // Пример с расширением:
+                var extension = Path.GetExtension(file.Name).ToLowerInvariant();
+                string mimeType = extension switch
+                {
+                    ".jpg" => "image/jpeg",
+                    ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    ".gif" => "image/gif",
+                    ".webp" => "image/webp",
+                    ".bmp" => "image/bmp",
+                    _ => "application/octet-stream"
+                };
+                Movie.PosterMimeType = mimeType; // Сохраняем MIME-тип
             }
 
-            // Если вы сохраняете имя файла:
-            // Movie.PosterFileName = file.Name;
-
-            // Очистить поле InputFile, чтобы можно было выбрать тот же файл повторно, если нужно
-            // Однако, в Blazor Server это не всегда требуется, так как состояние сохраняется.
-            // Если вы используете Blazor WebAssembly, может потребоваться более сложная обработка.
+            _newPosterUploaded = true;
         }
         else
         {
-            Movie.PosterImage = null; // Сбрасываем постер, если файл не выбран
+            _newPosterUploaded = false;
         }
-
-        // StateHasChanged(); // Может потребоваться для обновления UI, если отображение зависит от загруженного файла
     }
 }

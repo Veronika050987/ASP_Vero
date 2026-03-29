@@ -1,10 +1,11 @@
 ﻿@page "/movies/edit"
 @using Microsoft.EntityFrameworkCore
 @using Movies.Models
-@using Microsoft.AspNetCore.Components.Forms // Для InputFile
-@using System.IO // Для MemoryStream
+@using Microsoft.AspNetCore.Components.Forms
+@using System.IO
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -148,56 +149,49 @@ else
         }
     }
 
-    // Метод для обработки загрузки файла постера
     private async Task HandlePosterUpload(InputFileChangeEventArgs e)
     {
         var file = e.File;
 
         if (file != null)
         {
-            // Ограничиваем размер файла (например, 5MB)
-            const long maxFileSize = 1024 * 1024 * 5;
+            const long maxFileSize = 1024 * 1024 * 5; // 5 MB
             if (file.Size > maxFileSize)
             {
-                // Здесь нужно добавить обработку ошибки, например, через ValidationMessage
-                // Для простоты, выводим в консоль и выходим.
                 Console.WriteLine($"File size too large: {file.Size}");
+                // Здесь нужна обработка ошибки, например, добавить в ValidationMessage
                 return;
             }
 
             using (var memoryStream = new MemoryStream())
             {
                 await file.OpenReadStream().CopyToAsync(memoryStream);
-                // Обновляем Poster в текущем объекте Movie, который связан с EditForm
-                Movie!.PosterImage = memoryStream.ToArray(); // Используем '!' т.к. Movie гарантированно не null на этом этапе
+                Movie.PosterImage = memoryStream.ToArray();
+                // Получаем MIME-тип файла.
+                // В ASP.NET Core.Components.Forms FileInfo объект сам по себе не хранит MIME-тип.
+                // Для надежности, вам может потребоваться библиотека для определения MIME-типа по содержимому файла,
+                // или полагаться на расширение файла.
+                // Пример с расширением:
+                var extension = Path.GetExtension(file.Name).ToLowerInvariant();
+                string mimeType = extension.ToLowerInvariant() switch
+                {
+                    ".jpg" => "image/jpeg", 
+                    ".jpeg" => "image/jpeg", 
+                    ".png" => "image/png", 
+                    ".gif" => "image/gif", 
+                    ".webp" => "image/webp", 
+                    ".bmp" => "image/bmp", 
+                    _ => "application/octet-stream"
+                };
+                Movie.PosterMimeType = mimeType; // Сохраняем MIME-тип
             }
-            _newPosterUploaded = true; // Отмечаем, что новый постер был загружен
+
+            _newPosterUploaded = true;
         }
         else
         {
-            // Если пользователь снял выбор файла, или произошла ошибка,
-            // мы не меняем существующий постер, но сбрасываем флаг.
             _newPosterUploaded = false;
         }
-        // StateHasChanged(); // Может потребоваться для немедленного обновления UI, если это необходимо
-
-        // try
-        // {
-        //     await context.SaveChangesAsync();
-        // }
-        // catch (DbUpdateConcurrencyException)
-        // {
-        //     if (!MovieExists(Movie!.Id))
-        //     {
-        //         NavigationManager.NavigateTo("notfound");
-        //     }
-        //     else
-        //     {
-        //         throw;
-        //     }
-        // }
-
-        // NavigationManager.NavigateTo($"/movies/details?id={Movie.Id}");
     }
 
     private bool MovieExists(int id)
