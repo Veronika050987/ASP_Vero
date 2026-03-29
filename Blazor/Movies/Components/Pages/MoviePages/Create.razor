@@ -1,6 +1,7 @@
 ﻿@page "/movies/create"
 @using Microsoft.EntityFrameworkCore
 @using Movies.Models
+@using System.IO
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
 @using Microsoft.AspNetCore.Components.Forms
