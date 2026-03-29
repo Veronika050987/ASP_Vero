@@ -36,6 +36,12 @@
                 <ValidationMessage For="() => Movie.URL" class="text-danger" />
             </div>
 
+            <div class="mb-3">
+                <label for="Poster" class="form-label">Poster:</label>
+                <InputText id="Poster" @bind-Value="Movie.Poster" class="form-control" />
+                <ValidationMessage For="() => Movie.Poster" class="text-danger" />
+            </div>
+
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
