@@ -3,6 +3,7 @@
 @using Movies.Models
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Forms // Необходимо для InputFile
 
 <PageTitle>Create</PageTitle>
 
@@ -38,8 +39,15 @@
 
             <div class="mb-3">
                 <label for="Poster" class="form-label">Poster:</label>
-                <InputText id="Poster" @bind-Value="Movie.Poster" class="form-control" />
-                <ValidationMessage For="() => Movie.Poster" class="text-danger" />
+                @* Используем InputFile для загрузки картинки *@
+                <InputFile id="poster" OnChange="HandlePosterUpload" class="form-control" />
+                @* Отображаем превью картинки, если она загружена *@
+                @if (Movie.PosterImage != null)
+                {
+                    var posterBase64 = Convert.ToBase64String(Movie.PosterImage);
+                    <img src="" alt="Poster Preview" style="max-width: 200px; margin-top: 10px;" />
+                }
+                <ValidationMessage For="() => Movie.PosterImage" class="text-danger" />
             </div>
 
             <button type="submit" class="btn btn-primary">Create</button>
@@ -62,5 +70,41 @@
         context.Movie.Add(Movie);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/movies");
+    }
+
+    private async Task HandlePosterUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file != null)
+        {
+            // Ограничиваем размер файла, если необходимо
+            const long maxFileSize = 1024 * 1024 * 5; // 5 MB
+            if (file.Size > maxFileSize)
+            {
+                // Обработка ошибки: файл слишком большой
+                // Можно добавить в ValidationMessage или вывести сообщение пользователю
+                return;
+            }
+
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.OpenReadStream().CopyToAsync(memoryStream);
+                Movie.PosterImage = memoryStream.ToArray();
+            }
+
+            // Если вы сохраняете имя файла:
+            // Movie.PosterFileName = file.Name;
+
+            // Очистить поле InputFile, чтобы можно было выбрать тот же файл повторно, если нужно
+            // Однако, в Blazor Server это не всегда требуется, так как состояние сохраняется.
+            // Если вы используете Blazor WebAssembly, может потребоваться более сложная обработка.
+        }
+        else
+        {
+            Movie.PosterImage = null; // Сбрасываем постер, если файл не выбран
+        }
+
+        // StateHasChanged(); // Может потребоваться для обновления UI, если отображение зависит от загруженного файла
     }
 }

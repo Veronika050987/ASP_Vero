@@ -1,6 +1,8 @@
 ﻿@page "/movies/edit"
 @using Microsoft.EntityFrameworkCore
 @using Movies.Models
+@using Microsoft.AspNetCore.Components.Forms // Для InputFile
+@using System.IO // Для MemoryStream
 @inject IDbContextFactory<Movies.Data.MoviesContext> DbFactory
 @inject NavigationManager NavigationManager
 
@@ -44,8 +46,13 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="poster" class="form-label">Poster:</label>
-                    <InputText id="poster" @bind-Value="Movie.Poster" class="form-control" />
-                    <ValidationMessage For="() => Movie.Poster" class="text-danger" />
+                    <InputFile id="poster" OnChange="HandlePosterUpload" class="form-control" />
+                    @if (Movie.PosterImage != null && Movie.PosterImage.Length > 0)
+                    {
+                        var currentPosterBase64 = Convert.ToBase64String(Movie.PosterImage);
+                        <img src="" alt="Current Poster" style="max-width: 200px; margin-top: 10px;" />
+                    }
+                    <ValidationMessage For="() => Movie.PosterImage" class="text-danger" />
                 </div>
 
 
@@ -66,6 +73,9 @@ else
     [SupplyParameterFromForm]
     private Movie? Movie { get; set; }
 
+    // Флаг, указывающий, был ли загружен новый постер
+    private bool _newPosterUploaded = false;
+
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
@@ -81,26 +91,113 @@ else
     // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateMovie()
     {
+        if (Movie is null) return; // На всякий случай
+
         using var context = DbFactory.CreateDbContext();
-        context.Attach(Movie!).State = EntityState.Modified;
+        // context.Attach(Movie!).State = EntityState.Modified;
+        var existingMovie = await context.Movie.FindAsync(Movie.Id);// Находим сущность по Id
 
-        try
+        if (existingMovie != null)
         {
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!MovieExists(Movie!.Id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
-        }
+            // Обновляем поля, кроме постера, если новый не был загружен
+            existingMovie.Title = Movie.Title;
+            existingMovie.ReleaseDate = Movie.ReleaseDate;
+            existingMovie.Genre = Movie.Genre;
+            existingMovie.URL = Movie.URL;
 
-        NavigationManager.NavigateTo($"/movies/details?id={Movie.Id}");
+            // Если был загружен новый постер, обновляем его
+            if (_newPosterUploaded && Movie.PosterImage != null)
+            {
+                existingMovie.PosterImage = Movie.PosterImage;
+            }
+            // Если новый постер не был загружен, existingMovie.Poster остается прежним.
+
+            // Отмечаем, что сущность изменена
+            context.Update(existingMovie);
+
+            try
+            {
+                await context.SaveChangesAsync();
+                // Перенаправляем на страницу деталей после успешного сохранения
+                NavigationManager.NavigateTo($"/movies/details?id={Movie.Id}");
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!MovieExists(Movie.Id))
+                {
+                    NavigationManager.NavigateTo("notfound");
+                }
+                else
+                {
+                    // Обработка других ошибок конкуренции или ошибок сохранения
+                    // Можно обновить UI или вывести сообщение пользователю
+                    throw; // Перебрасываем исключение, если не можем обработать
+                }
+            }
+            catch (Exception ex)
+            {
+                // Обработка других возможных исключений при сохранении
+                Console.WriteLine($"Error saving movie: {ex.Message}");
+                // Можно обновить UI или вывести сообщение пользователю
+            }
+        }
+        else
+        {
+            // Фильм не найден для обновления
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // Метод для обработки загрузки файла постера
+    private async Task HandlePosterUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file != null)
+        {
+            // Ограничиваем размер файла (например, 5MB)
+            const long maxFileSize = 1024 * 1024 * 5;
+            if (file.Size > maxFileSize)
+            {
+                // Здесь нужно добавить обработку ошибки, например, через ValidationMessage
+                // Для простоты, выводим в консоль и выходим.
+                Console.WriteLine($"File size too large: {file.Size}");
+                return;
+            }
+
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.OpenReadStream().CopyToAsync(memoryStream);
+                // Обновляем Poster в текущем объекте Movie, который связан с EditForm
+                Movie!.PosterImage = memoryStream.ToArray(); // Используем '!' т.к. Movie гарантированно не null на этом этапе
+            }
+            _newPosterUploaded = true; // Отмечаем, что новый постер был загружен
+        }
+        else
+        {
+            // Если пользователь снял выбор файла, или произошла ошибка,
+            // мы не меняем существующий постер, но сбрасываем флаг.
+            _newPosterUploaded = false;
+        }
+        // StateHasChanged(); // Может потребоваться для немедленного обновления UI, если это необходимо
+
+        // try
+        // {
+        //     await context.SaveChangesAsync();
+        // }
+        // catch (DbUpdateConcurrencyException)
+        // {
+        //     if (!MovieExists(Movie!.Id))
+        //     {
+        //         NavigationManager.NavigateTo("notfound");
+        //     }
+        //     else
+        //     {
+        //         throw;
+        //     }
+        // }
+
+        // NavigationManager.NavigateTo($"/movies/details?id={Movie.Id}");
     }
 
     private bool MovieExists(int id)
