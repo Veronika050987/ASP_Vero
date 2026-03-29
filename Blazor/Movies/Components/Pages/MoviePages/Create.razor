@@ -47,7 +47,8 @@
                 @if (Movie.PosterImage != null)
                 {
                     var posterBase64 = Convert.ToBase64String(Movie.PosterImage);
-                    <img src="" alt="Poster Preview" style="max-width: 200px; margin-top: 10px;" />
+                    var dataUrl = $"data:{Movie.PosterMimeType};base64,{posterBase64}";
+                    <img src="@dataUrl" alt="Poster Preview" style="max-width: 200px; margin-top: 10px;" />
                 }
                 <ValidationMessage For="() => Movie.PosterImage" class="text-danger" />
             </div>
