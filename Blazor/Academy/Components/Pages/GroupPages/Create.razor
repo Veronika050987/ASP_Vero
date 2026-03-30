@@ -22,13 +22,13 @@
             </div>        
             <div class="mb-3">
                 <label for="direction" class="form-label">direction:</label> 
-                <InputNumber id="direction" @bind-Value="Group.direction" class="form-control" /> 
-                <ValidationMessage For="() => Group.direction" class="text-danger" /> 
+                <InputNumber id="direction" @bind-Value="DirectionInput" class="form-control" />
+                <ValidationMessage For="() => DirectionInput" class="text-danger" />
             </div>        
             <div class="mb-3">
                 <label for="learning_days" class="form-label">learning_days:</label> 
-                <InputNumber id="learning_days" @bind-Value="Group.learning_days" class="form-control" /> 
-                <ValidationMessage For="() => Group.learning_days" class="text-danger" /> 
+                <InputNumber id="learning_days" @bind-Value="LearningDaysInput" class="form-control" />
+                <ValidationMessage For="() => LearningDaysInput" class="text-danger" />
             </div>        
             <div class="mb-3">
                 <label for="start_time" class="form-label">start_time:</label> 
@@ -49,6 +49,29 @@
     private Group Group { get; set; } = new();
 
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+
+    private int DirectionInput
+    {
+        get => Group.direction;
+        set
+        {
+            if (value >= 0 && value <= 255)
+                Group.direction = (byte)value;
+        }
+    }
+
+    private int LearningDaysInput
+    {
+        get => Group.learning_days; 
+        set
+        {
+            
+            if (value >= 0 && value <= 255)
+                Group.learning_days = (byte)value;
+
+        }
+    }
+
     private async Task AddGroup()
     {
         using var context = DbFactory.CreateDbContext();

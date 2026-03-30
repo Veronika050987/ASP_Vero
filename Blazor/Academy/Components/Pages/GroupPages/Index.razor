@@ -15,10 +15,10 @@
 </p>
 
 <QuickGrid Class="table" Items="Groups">
-    <PropertyColumn Property="group => group.group_name" />
-    <PropertyColumn Property="group => group.Direction.direction_name" />
-    <PropertyColumn Property="group => group.learning_days" />
-    <PropertyColumn Property="group => group.start_time" />
+    <PropertyColumn Property="group => group.group_name" Title="Group name"/>
+    <PropertyColumn Property="group => group.Direction.direction_name" Title="Direction name"/>
+    <PropertyColumn Property="group => group.learning_days" Title="Learning days"/>
+    <PropertyColumn Property="group => group.start_time" Title="Start time"/>
 
     <TemplateColumn Context="group">
         <a href="@($"groups/edit?group_id={group.group_id}")">Edit</a> |
