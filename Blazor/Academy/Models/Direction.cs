@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Academy.Models.ValidationAttributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace Academy.Models
 {
@@ -7,6 +8,7 @@ namespace Academy.Models
 		[Key]
 		public byte direction_id { get; set; }
 		[Required]
+		[UniqueDirectionName(ErrorMessage = "Error: такое направление уже существует")]
 		public string direction_name { get; set; }
 
 	}
