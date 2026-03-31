@@ -32,7 +32,10 @@
             </div>        
             <div class="mb-3">
                 <label for="start_time" class="form-label">start_time:</label> 
-                <InputDate id="start_time" @bind-Value="Group.start_time" class="form-control" /> 
+                <input type="time"
+                       id="start_time"
+                       @bind="Group.start_time"
+                       @bind:format="HH:mm" class="form-control" />
                 <ValidationMessage For="() => Group.start_time" class="text-danger" /> 
             </div>        
             <button type="submit" class="btn btn-primary">Create</button>
@@ -47,6 +50,8 @@
 @code {
     [SupplyParameterFromForm]
     private Group Group { get; set; } = new();
+
+    public TimeOnly start_time { get; set; }
 
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
 
