@@ -40,7 +40,42 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="learning_days" class="form-label">learning_days:</label>
-                    <InputNumber id="learning_days" @bind-Value="LearningDays" class="form-control" />
+                    @* Понедельник (0) *@
+                    <div class="form-check">
+                        <InputCheckbox id="learning_days_mon" @bind-Value="IsMondaySelected" />
+                        <label class="form-check-label" for="learning_days_mon">Monday</label>
+                    </div>
+                    @* Вторник (1) *@
+                    <div class="form-check">
+                        <InputCheckbox id="learning_days_tue" @bind-Value="IsTuesdaySelected" />
+                        <label class="form-check-label" for="learning_days_tue">Tuesday</label>
+                    </div>
+                    @* Среда (2) *@
+                    <div class="form-check">
+                        <InputCheckbox id="learning_days_wed" @bind-Value="IsWednesdaySelected" />
+                        <label class="form-check-label" for="learning_days_wed">Wednesday</label>
+                    </div>
+                    @* Четверг (3) *@
+                    <div class="form-check">
+                        <InputCheckbox id="learning_days_thu" @bind-Value="IsThursdaySelected" />
+                        <label class="form-check-label" for="learning_days_thu">Thursday</label>
+                    </div>
+                    @* Пятница (4) *@
+                    <div class="form-check">
+                        <InputCheckbox id="learning_days_fri" @bind-Value="IsFridaySelected" />
+                        <label class="form-check-label" for="learning_days_fri">Friday</label>
+                    </div>
+                    @* Суббота (5) *@
+                    <div class="form-check">
+                        <InputCheckbox id="learning_days_sat" @bind-Value="IsSaturdaySelected" />
+                        <label class="form-check-label" for="learning_days_sat">Saturday</label>
+                    </div>
+                    @* Воскресенье (6) *@
+                    <div class="form-check">
+                        <InputCheckbox id="learning_days_sun" @bind-Value="IsSundaySelected" />
+                        <label class="form-check-label" for="learning_days_sun">Sunday</label>
+                    </div>
+                    @* Валидационное сообщение для всех дней *@
                     <ValidationMessage For="() => Group.learning_days" class="text-danger" />
                 </div>
                 <div class="mb-3">
@@ -79,8 +114,14 @@ else
         }
     }
 
-    int learning_days;
-    public int LearningDays{ get => learning_days; set => Group.learning_days = (byte)(learning_days = value); }
+    private bool IsMondaySelected { get => IsDaySelected(0); set => ToggleDaySelection(value, 0); }
+    private bool IsTuesdaySelected { get => IsDaySelected(1); set => ToggleDaySelection(value, 1); }
+    private bool IsWednesdaySelected { get => IsDaySelected(2); set => ToggleDaySelection(value, 2); }
+    private bool IsThursdaySelected { get => IsDaySelected(3); set => ToggleDaySelection(value, 3); }
+    private bool IsFridaySelected { get => IsDaySelected(4); set => ToggleDaySelection(value, 4); }
+    private bool IsSaturdaySelected { get => IsDaySelected(5); set => ToggleDaySelection(value, 5); }
+    private bool IsSundaySelected { get => IsDaySelected(6); set => ToggleDaySelection(value, 6); }
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -96,7 +137,26 @@ else
         {
             NavigationManager.NavigateTo("notfound");
         }
-        LearningDays = Group.learning_days;
+    }
+
+    private bool IsDaySelected(int dayOfWeek)
+    {
+        // dayOfWeek: 0 - Понедельник, 1 - Вторник, ..., 6 - Воскресенье
+        return (Group!.learning_days & (1 << dayOfWeek)) != 0;
+    }
+
+    private void ToggleDaySelection(bool isSelected, int dayOfWeek)
+    {
+        if (isSelected)
+        {
+            // Устанавливаем бит
+            Group!.learning_days |= (byte)(1 << dayOfWeek);
+        }
+        else
+        {
+            // Сбрасываем бит
+            Group!.learning_days &= (byte)~(1 << dayOfWeek);
+        }
     }
 
     // To protect from overposting attacks, enable the specific properties you want to bind to.
