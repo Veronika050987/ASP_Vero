@@ -22,8 +22,14 @@
             </div>        
             <div class="mb-3">
                 <label for="direction" class="form-label">direction:</label> 
-                <InputNumber id="direction" @bind-Value="DirectionInput" class="form-control" />
-                <ValidationMessage For="() => DirectionInput" class="text-danger" />
+                <InputSelect id="direction_select" @bind-Value="SelectedDirectionId" class="form-control">
+                    <option value="">-- Select Direction --</option>
+                    @foreach (var dir in DirectionOptions)
+                    {
+                        <option value="@dir.direction_id">@dir.direction_name</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => SelectedDirectionId" class="text-danger" />
             </div>        
             <div class="mb-3">
                 <label for="learning_days" class="form-label">learning_days:</label> 
@@ -55,13 +61,21 @@
 
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
 
-    private int DirectionInput
+    private List<Direction> DirectionOptions { get; set; } = new List<Direction>();
+
+    private string SelectedDirectionId
     {
-        get => Group.direction;
+        get => Group.direction.ToString(); // Преобразуем byte ID в строку
         set
         {
-            if (value >= 0 && value <= 255)
-                Group.direction = (byte)value;
+            if (byte.TryParse(value, out byte parsedId))
+            {
+                Group.direction = parsedId;
+            }
+            else
+            {
+                Group.direction = 0;
+            }
         }
     }
 
@@ -70,10 +84,21 @@
         get => Group.learning_days; 
         set
         {
-            
+
             if (value >= 0 && value <= 255)
                 Group.learning_days = (byte)value;
 
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        DirectionOptions = await context.Directions.ToListAsync();
+
+        if (Group.direction == 0 && DirectionOptions.Any())
+        {
+            Group.direction = DirectionOptions.First().direction_id;
         }
     }
 

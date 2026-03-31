@@ -29,8 +29,14 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="direction" class="form-label">direction:</label>
-                    <InputNumber id="direction" @bind-Value="Direction" class="form-control" />
-                    <ValidationMessage For="() => Group.direction" class="text-danger" />
+                    <InputSelect id="direction_select" @bind-Value="SelectedDirectionId" class="form-control">
+                        <option value="">-- Select Direction --</option>
+                        @foreach (var dir in DirectionOptions)
+                        {
+                            <option value="@dir.direction_id">@dir.direction_name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => SelectedDirectionId" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="learning_days" class="form-label">learning_days:</label>
@@ -59,21 +65,37 @@ else
     [SupplyParameterFromForm]
     private Group? Group { get; set; }
 
-    int direction;
+    private List<Direction> DirectionOptions { get; set; } = new List<Direction>();
+
+    private string SelectedDirectionId
+    {
+        get => Group!.direction.ToString(); // Преобразуем byte ID в строку
+        set
+        {
+            if (byte.TryParse(value, out byte parsedId))
+            {
+                Group!.direction = parsedId;
+            }
+        }
+    }
+
     int learning_days;
-    public int Direction{ get => direction; set => Group.direction = (byte)(direction = value); }
     public int LearningDays{ get => learning_days; set => Group.learning_days = (byte)(learning_days = value); }
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        Group ??= await context.Groups.FirstOrDefaultAsync(m => m.group_id == group_id);
+
+        DirectionOptions = await context.Directions.ToListAsync();
+
+        Group ??= await context.Groups
+                .Include(g => g.Direction)
+                .FirstOrDefaultAsync(m => m.group_id == group_id);
 
         if (Group is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
-        Direction = Group.direction;
         LearningDays = Group.learning_days;
     }
 
@@ -82,7 +104,14 @@ else
     private async Task UpdateGroup()
     {
         using var context = DbFactory.CreateDbContext();
-        context.Attach(Group!).State = EntityState.Modified;
+        if (context.Entry(Group!).State == EntityState.Detached)
+        {
+            context.Attach(Group!).State = EntityState.Modified;
+        }
+        else if (context.Entry(Group!).State == EntityState.Unchanged)
+        {
+            context.Entry(Group!).State = EntityState.Modified;
+        }
 
         try
         {
