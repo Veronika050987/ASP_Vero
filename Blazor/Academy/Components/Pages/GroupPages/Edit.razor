@@ -39,7 +39,8 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="start_time" class="form-label">start_time:</label>
-                    <InputDate id="start_time" @bind-Value="Group.start_time" class="form-control" />
+                    @* <InputDate id="start_time" @bind-Value="Group.start_time" class="form-control" /> *@
+                    <InputDate Type="InputDateType.Time" @bind-Value="Group.start_time" class="form-control" />
                     <ValidationMessage For="() => Group.start_time" class="text-danger" />
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
