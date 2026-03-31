@@ -38,8 +38,7 @@ else
                     <ValidationMessage For="() => Group.learning_days" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="start_time" class="form-label">start_time:</label>
-                    @* <InputDate id="start_time" @bind-Value="Group.start_time" class="form-control" /> *@
+                    <label for="start_time" class="form-label">start_time:</label>                
                     <InputDate Type="InputDateType.Time" @bind-Value="Group.start_time" class="form-control" />
                     <ValidationMessage For="() => Group.start_time" class="text-danger" />
                 </div>
