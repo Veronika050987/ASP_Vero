@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Academy2.Models.ValidationAttributes;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Academy2.Components.Models
@@ -9,6 +10,7 @@ namespace Academy2.Components.Models
 		public int group_id { get; set; }
 		
 		[Required]
+		[UniqueGroupName(ErrorMessage = "Error: такое направление уже существует")]
 		public string group_name { get; set; }
 		
 		[Required]
