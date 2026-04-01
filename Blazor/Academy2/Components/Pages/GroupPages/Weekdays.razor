@@ -1,0 +1,14 @@
+﻿<h3>Weekdays</h3>
+
+<ul class="weekdays">
+</ul>
+@for(int i=0; i<7;i++)
+{
+    <li><InputCheckbox @bind-Value="learning_days[i]" />@DAYNAMES[i]</li>
+	
+}
+
+@code {
+	readonly string[] DAYNAMES = { "Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс" };
+	bool[] learning_days = new bool[7];
+}
