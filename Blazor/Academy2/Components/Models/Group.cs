@@ -7,8 +7,10 @@ namespace Academy2.Components.Models
 	{
 		[Key]
 		public int group_id { get; set; }
+		
 		[Required]
 		public string group_name { get; set; }
+		
 		[Required]
 		[Column(TypeName = "tinyint")]
 		//[MinLength(1)]
