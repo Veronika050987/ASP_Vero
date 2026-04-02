@@ -18,7 +18,12 @@
     <PropertyColumn Property="group => group.group_id" />
     <PropertyColumn Property="group => group.group_name" />
     <PropertyColumn Property="group => group.direction" />
-    <PropertyColumn Property="group => LearningDays.GetDays(group.learning_days)" />
+    @* <PropertyColumn Property="group => LearningDays.GetDays(group.learning_days)" /> *@
+    <TemplateColumn Context="group">
+        <span style="color: @LearningDays.GetDaysColor(group.learning_days);">
+            @LearningDays.GetDays(group.learning_days)
+        </span>
+    </TemplateColumn>
     <PropertyColumn Property="group => group.start_time" />
 
     <TemplateColumn Context="group">

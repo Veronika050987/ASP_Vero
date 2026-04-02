@@ -47,12 +47,11 @@
                 <InputNumber id="direction" @bind-Value="Group.direction" class="form-control" aria-required="true" />
                 <ValidationMessage For="() => Group.direction" class="text-danger" />
             </div> *@
-            <Weekdays/>
             <div class="mb-3">
-                <label for="learning_days" class="form-label">learning_days:</label> 
-                <InputNumber id="learning_days" @bind-Value="Group.learning_days" class="form-control" /> 
-                <ValidationMessage For="() => Group.learning_days" class="text-danger" /> 
-            </div>        
+                <label for="learning_days" class="form-label">learning_days:</label>
+                <Weekdays @bind-Value="Group.learning_days" />
+                <ValidationMessage For="() => Group.learning_days" class="text-danger" />
+            </div>
             <div class="mb-3">
                 <label for="start_time" class="form-label">start_time:</label> 
                 <InputDate Type="InputDateType.Time" id="start_time" @bind-Value="Group.start_time" class="form-control" /> 
@@ -70,16 +69,6 @@
 @code {
     [SupplyParameterFromForm]
     private Group Group { get; set; } = new();
-
-    // DbContext context = Academy2.Data.Academy2Context;
-
-    //IQueryable<Direction> Directions { get; set; } = default!;
-
-    protected override void OnInitialized()
-    {
-        //base.OnInitialized();
-        //Directions = DbFactory.CreateDbContext().Directions;
-    }
 
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddGroup()

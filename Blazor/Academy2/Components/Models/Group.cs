@@ -10,7 +10,7 @@ namespace Academy2.Components.Models
 		public int group_id { get; set; }
 		
 		[Required]
-		[UniqueGroupName(ErrorMessage = "Error: такое направление уже существует")]
+		[UniqueGroupName(ErrorMessage = "Error: такая группа уже существует")]
 		public string group_name { get; set; }
 		
 		[Required]

@@ -20,5 +20,15 @@
 			}
 			return string.Join(", ", result);
 		}
+
+		public static string GetDaysColor(int learningDaysValue)
+		{
+			bool includesWeekend = false;
+			if (((learningDaysValue >> 5) & 1) == 1 || ((learningDaysValue >> 6) & 1) == 1) // Проверяем биты для Сб (5) и Вс (6)
+			{
+				includesWeekend = true;
+			}
+			return includesWeekend ? "#FF6347" : "#4682B4"; // "inherit" - стандартный цвет текста
+		}
 	}
 }
