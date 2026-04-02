@@ -24,7 +24,7 @@
 		public static string GetDaysColor(int learningDaysValue)
 		{
 			bool includesWeekend = false;
-			if (((learningDaysValue >> 5) & 1) == 1 || ((learningDaysValue >> 6) & 1) == 1) // Проверяем биты для Сб (5) и Вс (6)
+			if (((learningDaysValue >> 5) & 1) == 1 || ((learningDaysValue >> 6) & 1) == 1)
 			{
 				includesWeekend = true;
 			}

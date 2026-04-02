@@ -34,7 +34,6 @@ else
                     <InputNumber id="direction" @bind-Value="Group.direction" class="form-control" aria-required="true"/>
                     <ValidationMessage For="() => Group.direction" class="text-danger" />
                 </div>
-                <Weekdays />
                 <div class="mb-3">
                     <label for="learning_days" class="form-label">learning_days:</label>
                     <Weekdays @bind-Value="Group.learning_days" />
