@@ -1,0 +1,15 @@
+﻿.weekdays-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.weekday-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+    .weekday-item label {
+        margin-bottom: 0; /* Убираем стандартный отступ снизу у label */
+    }

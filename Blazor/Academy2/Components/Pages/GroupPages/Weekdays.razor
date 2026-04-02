@@ -1,14 +1,78 @@
 ﻿<h3>Weekdays</h3>
 
-<ul class="weekdays">
-</ul>
-@for(int i=0; i<7;i++)
-{
-    <li><InputCheckbox @bind-Value="learning_days[i]" />@DAYNAMES[i]</li>
-	
-}
+@rendermode InteractiveServer
+@using System.Diagnostics.CodeAnalysis
+
+<div>
+    @foreach (DayInfo day in learning_days)
+    {
+        <div style="display:flex; justify-content:space-between;">
+            <label for="@day.Name" class="form-label">@day.Name</label>
+            <input type="checkbox"
+                   id="@day.Name"
+                   @bind="@day.IsWorking"
+                   @bind:after="OnChange" />
+        </div>
+    }
+</div>
 
 @code {
-	readonly string[] DAYNAMES = { "Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс" };
-	bool[] learning_days = new bool[7];
+    List<DayInfo> learning_days = new List<DayInfo>
+    {
+        new DayInfo { Name = "Понедельник", IsWorking = false },
+        new DayInfo { Name = "Вторник", IsWorking = false },
+        new DayInfo { Name = "Среда", IsWorking = false },
+        new DayInfo { Name = "Четверг", IsWorking = false },
+        new DayInfo { Name = "Пятница", IsWorking = false },
+        new DayInfo { Name = "Суббота", IsWorking = false },
+        new DayInfo { Name = "Воскресенье", IsWorking = false }
+    };
+
+    [Parameter]
+    public int Value { get; set; }
+
+    [Parameter]
+    public EventCallback<int> ValueChanged { get; set; }
+
+    private class DayInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public bool IsWorking { get; set; }
+    }
+
+    protected override void OnInitialized()
+    {
+        UpdateDaysFromValue();
+        base.OnInitialized();
+    }
+
+    private async Task OnChange()
+    {
+        UpdateCurrentValue();
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private void UpdateCurrentValue()
+    {
+        byte result = 0;
+        for (int i = 0; i < learning_days.Count; i++)
+        {
+            if (learning_days[i].IsWorking)
+            {
+                result |= (byte)(1 << i);
+            }
+        }
+        Value = result;
+    }
+
+    private void UpdateDaysFromValue()
+    {
+        int temp = Value;
+        for (int i = 0; i < 7; i++)
+        {
+            if (temp % 2 == 1)
+                learning_days[i].IsWorking = true;
+            temp = temp / 2;
+        }
+    }
 }
