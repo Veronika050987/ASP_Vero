@@ -18,7 +18,7 @@
     <PropertyColumn Property="group => group.group_id" />
     <PropertyColumn Property="group => group.group_name" />
     <PropertyColumn Property="group => group.direction" />
-    <PropertyColumn Property="group => group.learning_days" />
+    <PropertyColumn Property="group => new Week(group.learning_days)" />
     <PropertyColumn Property="group => group.start_time" />
 
     <TemplateColumn Context="group">

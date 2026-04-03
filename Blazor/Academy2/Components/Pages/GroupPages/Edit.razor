@@ -3,6 +3,7 @@
 @using Academy2.Components.Models
 @inject IDbContextFactory<Academy2.Data.Academy2Context> DbFactory
 @inject NavigationManager NavigationManager
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -29,11 +30,26 @@ else
                     <ValidationMessage For="() => Group.group_name" class="text-danger" />
                 </div>
                 <div class="mb-3">
+                    <span class="text-danger">*</span>
+                    <label for="direction" class="form-label">direction:</label>
+                    <InputSelect id="direction" @bind-Value="Group.direction" class="form-control">
+                        @using (Academy2.Data.Academy2Context context = DbFactory.CreateDbContext())
+                        {
+                            @foreach (Direction d in context.Directions)
+                            {
+                                <option value="@d.direction_id">@d.direction_name</option>
+                            }
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Group.direction" class="text-danger" />
+                </div>
+                @* <div class="mb-3">
                 <span class="text-danger">*</span>
                     <label for="direction" class="form-label">direction:</label>
                     <InputNumber id="direction" @bind-Value="Group.direction" class="form-control" aria-required="true"/>
                     <ValidationMessage For="() => Group.direction" class="text-danger" />
-                </div>
+                </div> *@
+                <Weekdays Group="Group" />
                 <div class="mb-3">
                     <label for="learning_days" class="form-label">learning_days:</label>
                     <InputNumber id="learning_days" @bind-Value="Group.learning_days" class="form-control" />
@@ -41,7 +57,7 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="start_time" class="form-label">start_time:</label>
-                    <InputDate id="start_time" @bind-Value="Group.start_time" class="form-control" />
+                    <InputDate Type="InputDateType.Time" id="start_time" @bind-Value="Group.start_time" class="form-control" />
                     <ValidationMessage For="() => Group.start_time" class="text-danger" />
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
