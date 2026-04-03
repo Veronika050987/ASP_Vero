@@ -1,22 +1,49 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Academy2.Data;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
-using Academy2.Data;
+using System.ComponentModel.DataAnnotations;
+using Academy2.Components.Models;
 
 namespace Academy2.Models.ValidationAttributes
 {
 	public class UniqueGroupNameAttribute : ValidationAttribute
 	{
-		protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+		protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
 		{
-			if (value == null || string.IsNullOrWhiteSpace(value.ToString())) return ValidationResult.Success;
-			string groupName = value.ToString();
-			IDbContextFactory<Academy2Context> dbContextFactory = validationContext.GetService<IDbContextFactory<Academy2Context>>();
-			if (dbContextFactory == null) return new ValidationResult("No data....");
-			using (var context = dbContextFactory.CreateDbContext())
+			if (value == null) return ValidationResult.Success;
+
+			var dbContext = validationContext.GetService(typeof(Academy2Context)) as Academy2Context;
+			if (dbContext == null)
 			{
-				bool exists = context.Groups.Any(d => d.group_name.ToLower() == groupName.ToLower());
-				if (exists) return new ValidationResult(ErrorMessage ?? $"Group '{groupName}' already exists");
+				return ValidationResult.Success;
 			}
+
+			Group entity = null!;
+
+			if (validationContext.ObjectInstance is Group groupInstance)
+			{
+				entity = groupInstance;
+			}
+
+			else if (validationContext.ObjectInstance is EditContext editContext && editContext.Model is Group modelInstance)
+			{
+				entity = modelInstance;
+			}
+
+			if (entity == null)
+			{
+				return ValidationResult.Success;
+			}
+
+			bool exists = dbContext.Groups.Any(g =>
+				g.group_name == value.ToString() &&
+				g.group_id != entity.group_id);
+
+			if (exists)
+			{
+				return new ValidationResult(ErrorMessage ?? "Такая группа уже существует");
+			}
+
 			return ValidationResult.Success;
 		}
 	}
