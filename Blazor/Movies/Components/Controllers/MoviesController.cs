@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Movies.Models;
-using Movies.Components.Services;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;// Для IFormFile
+using Microsoft.AspNetCore.Mvc;
+using Movies.Components.Services;
+using Movies.Models;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.IO;
-using Microsoft.AspNetCore.Hosting;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 
 namespace Movies.Components.Controllers
@@ -36,7 +37,7 @@ namespace Movies.Components.Controllers
 			[HttpGet("{id}")]
 			public async Task<ActionResult<Movie>>GetMovie(int id)
 			{
-				var movie = await _movieService.GetMovieByIdAsync(id);
+				var movie = await _movieService.GetMovieByIdAsync();
 				
 				if(movie == null)
 				{
@@ -100,18 +101,70 @@ namespace Movies.Components.Controllers
 			// Принимает данные фильма и файл изображения для обновления
 			[HttpPut("{id}")]
 			[Consumes("multipart/form-data")]
-			public async Task<IActionResult>UpdateMovie(int id, [FromForm] Movie updateMoviedata,IFormFile? file)
+			public async Task<IActionResult>UpdateMovie([FromForm] Movie updateMoviedata,IFormFile? file)
 			{
 				if(!ModelState.IsValid)
 				{
 					return BadRequest(ModelState);
 				}
-				var existingMovie = await _movieService.GetMovieByIdAsync(id);
+				var existingMovie = await _movieService.GetMovieByIdAsync();
 				
 				if(existingMovie == null)
 				{
 					return NotFound();
 				}
+				
+				if(file != null && file.Length > 0)
+				{
+					var allowedExtenstions = new[]{ ".jpg", ".jpeg", ".png", ".gif" };
+
+					var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+					if(!allowedExtenstions.Contains(extension))
+					{
+						return BadRequest("Invalid image file type. Allowed types are .jpg, .jpeg, .png, .gif.");
+					}
+					
+					long maxFileSize = 10 * 1024 * 1024;// 10 MB
+					
+					if(file.Length > maxFileSize)
+					{
+						return BadRequest($"File size exceeds the limit of {maxFileSize / (1024 * 1024)} MB.");
+					}
+				}
+
+				// Сервис должен сам понять, является ли 'updatedMovieData' новыми полями
+				// или надо использовать ID из URL для поиска и обновления.
+				// В нашем InMemoryMovieService мы передаем ID в метод UpdateMovieAsync.
+				var updatedMovie = await _movieService.UpdateMovieAsync(id, updatedMovieData,ﬁle);
+				
+				if (updatedMovie == null)
+				{
+					return NotFound();
+				}
+
+				// Возвращаем полный URL к изображению
+				if (!string.IsNullOrEmpty(updatedMovie.ImageUrl) && !updatedMovie.ImageUrl.StartsWith("http"))
+				{
+					updatedMovie.ImageUrl = $"{Request.Scheme}://{Request.Host}{updatedMovie.ImageUrl}";
+				}										
+					return Ok(updatedMovie);
+				// Возвращаем обновленный объект
+			}
+
+			// DELETE: api/Movies/5
+			[HttpDelete("{id}")]
+
+			public async Task<IActionResult>DeleteMovie(int id)
+			{
+				var	deleted = await _movieService.DeleteMovieAsync(id);
+
+				if (!deleted)
+				{
+					return	NotFound();
+				}
+	
+			return NoContent();
+			// Возвращаем 204 No Content, если успешно удалено
 			}
 		}
 }
