@@ -36,7 +36,6 @@ builder.Services.AddScoped<ThemeService>();
 builder.Services.AddDbContextFactory<MoviesContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-var app = builder.Build();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen(options => {
@@ -46,6 +45,7 @@ builder.Services.AddSwaggerGen(options => {
 });
 
 builder.Services.AddEndpointsApiExplorer();
+var app = builder.Build();
 
 // 3. Создание папки для загрузок
 var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
@@ -57,15 +57,10 @@ if (!Directory.Exists(uploadFolder))
 // 4. Настройка HTTP-конвейера
 if (!app.Environment.IsDevelopment())
 {
-	app.UseExceptionHandler("/Error", createScopeForErrors: true);
-	app.UseHsts();
-}
-else
-{
-	app.UseMigrationsEndPoint();
+	app.UseSwagger();
+	app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 // 5. Статические файлы (стандартные + папка Uploads)
 app.UseStaticFiles();
 
@@ -75,8 +70,9 @@ app.UseStaticFiles(new StaticFileOptions
 	FileProvider = new PhysicalFileProvider(uploadFolder),
 	RequestPath = "/Uploads"
 });
+app.UseHttpsRedirection();
 
-
+app.MapControllers();
 
 app.UseAntiforgery();
 
