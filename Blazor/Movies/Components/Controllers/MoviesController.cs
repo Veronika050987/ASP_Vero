@@ -37,7 +37,7 @@ namespace Movies.Components.Controllers
 			[HttpGet("{id}")]
 			public async Task<ActionResult<Movie>>GetMovie(int id)
 			{
-				var movie = await _movieService.GetMovieByIdAsync();
+				var movie = await _movieService.GetMovieByIdAsync(id);
 				
 				if(movie == null)
 				{
