@@ -4,26 +4,40 @@
 @inject IDbContextFactory<Academy2.Data.Academy2Context> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Details</PageTitle>
+@using Microsoft.AspNetCore.Components.QuickGrid;
 
-<h1>Details</h1>
+<PageTitle>@direction?.direction_name</PageTitle>
+
+<h1>@direction?.direction_name</h1>
+@* <h1>Details</h1> *@
 
 <div>
-    <h2>Direction</h2>
+   @*  <h2>Direction</h2> *@
     <hr />
     @if (direction is null)
     {
         <p><em>Loading...</em></p>
     }
     else {
-        <dl class="row">
+        @* @direction.Groups; *@
+        @* <QuickGrid Class="table" Items="direction.Groups">
+
+        </QuickGrid> *@
+        <h3>Количество групп: @direction.Groups.Count</h3>
+        <ul style="list-style:none">
+        @foreach(Group group in direction.Groups)
+            {
+                <li>@group.group_name</li>
+            }
+        </ul>
+        @*  <dl class="row">
             <dt class="col-sm-2">direction_name</dt>
             <dd class="col-sm-10">@direction.direction_name</dd>
         </dl>
         <div>
             <a href="@($"/directions/edit?direction_id={direction.direction_id}")">Edit</a> |
             <a href="@($"/directions")">Back to List</a>
-        </div>
+        </div> *@
     }
 </div>
 
@@ -32,11 +46,12 @@
 
     [SupplyParameterFromQuery]
     private int direction_id { get; set; }
+    // IQueryable<Group>
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        direction = await context.Directions.FirstOrDefaultAsync(m => m.direction_id == direction_id);
+        direction = await context.Directions.Include(d => d.Groups).FirstOrDefaultAsync(m => m.direction_id == direction_id);
 
         if (direction is null)
         {
