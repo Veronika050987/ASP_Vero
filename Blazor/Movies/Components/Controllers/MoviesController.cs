@@ -101,13 +101,13 @@ namespace Movies.Components.Controllers
 			// Принимает данные фильма и файл изображения для обновления
 			[HttpPut("{id}")]
 			[Consumes("multipart/form-data")]
-			public async Task<IActionResult>UpdateMovie([FromForm] Movie updateMoviedata,IFormFile? file)
+			public async Task<IActionResult>UpdateMovie(int id, [FromForm] Movie updateMoviedata,IFormFile? file)
 			{
 				if(!ModelState.IsValid)
 				{
 					return BadRequest(ModelState);
 				}
-				var existingMovie = await _movieService.GetMovieByIdAsync();
+				var existingMovie = await _movieService.GetMovieByIdAsync(id);
 				
 				if(existingMovie == null)
 				{
