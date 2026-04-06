@@ -135,7 +135,7 @@ namespace Movies.Components.Controllers
 				// Сервис должен сам понять, является ли 'updatedMovieData' новыми полями
 				// или надо использовать ID из URL для поиска и обновления.
 				// В нашем InMemoryMovieService мы передаем ID в метод UpdateMovieAsync.
-				var updatedMovie = await _movieService.UpdateMovieAsync(id, updatedMovieData,ﬁle);
+				var updatedMovie = await _movieService.UpdateMovieAsync(id, updateMoviedata, file);
 				
 				if (updatedMovie == null)
 				{

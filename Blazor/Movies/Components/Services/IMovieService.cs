@@ -11,6 +11,6 @@ namespace Movies.Components.Services
 		Task<Movie> GetMovieByIdAsync();
 		Task<Movie> AddMovieAsync(Movie movie, IFormFile?imageFile);
 		Task<Movie> UpdateMovieAsync(int id, Movie movie, IFormFile? imageFile);
-		Task<bool> DeleteMovieAsync(); 
+		Task<bool> DeleteMovieAsync(int id); 
 	}
 }
