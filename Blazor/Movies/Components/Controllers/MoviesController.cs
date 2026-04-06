@@ -8,7 +8,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-
 namespace Movies.Components.Controllers
 {
 		[Route("api/[controller]")] // Определяет базовый путь для всех действий контроллера, например, /api/movies
