@@ -70,16 +70,16 @@
 
     // HttpClient is injected by default in Blazor Server/WebAssembly projects
     // If you are using a diﬀerent setup, you might need to initialize it.
-    [Inject]
-    private HttpClient HttpClient { get; set; }
+    // [Inject]
+    // private HttpClient HttpClient { get; set; }
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
+    // protected override void OnInitialized()
+    // {
+    //     base.OnInitialized();
 
-        // Initialize HttpClient if not injected
-        httpClient = new HttpClient(); // Only if not using DI
-    }
+    //     // Initialize HttpClient if not injected
+    //     httpClient = new HttpClient(); // Only if not using DI
+    // }
 
     private async Task SelectFile(InputFileChangeEventArgs e)
     {
@@ -122,61 +122,50 @@
         using var multipartContent = new MultipartFormDataContent();
 
         //Add movie details to the form data
-
         // These keys ("title", "genre", "year") should match what your API expects
-
         //multipartContent.Add(new StringContent(movie.Title ?? ""), "title");
-
         //multipartContent.Add(new StringContent(movie.Genre ?? ""), "genre");
-
         //multipartContent.Add(new StringContent(movie.Year.ToString()), "year");
-
         // Add the ﬁle content if a ﬁle was selected  
 
-        if(ﬁleContent != null && !string.IsNullOrEmpty(ﬁleName))
+        if (ﬁleContent != null && !string.IsNullOrEmpty(ﬁleName))
         {
-            HttpContent httpFileContent;
-            
-            // Пример, если fileContent - это Stream
-            if (fileContent is Stream stream)
+            // Используем HttpContent для файла, чтобы указать имя файла и тип содержимого
+            // Имя поля "file" должно совпадать с тем, что ожидает ваш API
+            multipartContent.Add(ﬁleContent, "file", ﬁleName);
+        }
+
+        try
+        {
+            // Assuming your API endpoint for creating movies and uploading images
+            // is something like POST /api/Movies 
+            var response = await httpClient.PostAsync("http://localhost:5000/api/Movies", multipartContent);
+
+            if(response.IsSuccessStatusCode)
             {
-                httpFileContent = new StreamContent(stream);
-                // Опционально: Установите Content-Type, если известно
-                // httpFileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream"); // Или другой MIME-тип
-            }
-            // Пример, если fileContent - это byte[]
-            else if (fileContent is byte[] byteArray && byteArray.Length > 0)
-            {
-                httpFileContent = new ByteArrayContent(byteArray);
-                // Опционально: Установите Content-Type, если известно
-                // httpFileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream"); // Или другой MIME-тип
+                //Successfully created movie. You might want to naviagate to the list page
+                Console.WriteLine("Movie created successfully!");
+                //await Navigationmanager.NavigateTo("/movies");//if you have Navigationmanager injected
             }
             else
             {
-                // Обработка ошибки, если тип fileContent не поддерживается
-                // Или если fileContent не является Stream или byte[]
-                throw new InvalidOperationException("Unsupported file content type.");
+                //Handle API errors 
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"API Error:{response.StatusCode} - {errorContent}");
+                //Display an error message to the user
             }
-
-            // The name parameter should match what your API expects for the file field
-            // Убедитесь, что "file" - это правильное имя поля
-            multipartContent.Add(httpFileContent, "file", fileName);
         }
-        try
+        catch(Exception ex)
         {
-            var response = await httpClient.PostAsync("http://localhost:5000/api/Movies", multipartContent);
-            response.EnsureSuccessStatusCode(); // Проверить на ошибки HTTP
+            //Handle network or other exceptions
+            Console.WriteLine($"An error occured: {ex.Message}");
+            //Display an error message to the user
         }
-        catch (HttpRequestException e)
+        finally
         {
-            // Обработка ошибок HTTP
-            Console.WriteLine($"Request error: {e.Message}");
+            //Dispose of the StreamContent after the request in sent
+            ﬁleContent?.Dispose();
+            ﬁleContent = null;
         }
-        catch (Exception e)
-        {
-            // Обработка других ошибок
-            Console.WriteLine($"An error occurred: {e.Message}");
-        }
-
     }
 }
