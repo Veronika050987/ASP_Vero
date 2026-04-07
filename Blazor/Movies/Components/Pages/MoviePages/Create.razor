@@ -17,7 +17,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <EditForm method="post" Model="Movie" OnValidSubmit="AddMovie" FormName="create" Enhance>
+        <EditForm method="post" Model="Movie" OnValidSubmit="SaveMovie" FormName="create" Enhance>
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
             <div class="mb-3">
@@ -41,18 +41,13 @@
                 <ValidationMessage For="() => Movie.URL" class="text-danger" />
             </div>
 
-            <div class="mb-3">
-                <label for="Poster" class="form-label">Poster:</label>
-                @* Используем InputFile для загрузки картинки *@
-                <InputFile id="poster" OnChange="HandlePosterUpload" class="form-control" />
-                @* Отображаем превью картинки, если она загружена *@
-                @if (Movie.PosterImage != null)
+            <div>
+                <label for="movieImage">Movie Image:</label>
+                <InputFile OnChange="SelectFile" id="movieImage" />
+                @if (!string.IsNullOrEmpty(imgUrl))
                 {
-                    var posterBase64 = Convert.ToBase64String(Movie.PosterImage);
-                    var dataUrl = $"data:{Movie.PosterMimeType};base64,{posterBase64}";
-                    <img src="@dataUrl" alt="Poster Preview" style="max-width: 200px; margin-top: 10px;" />
+                    <img src="" alt="Selected Movie Image" style="max-width: 200px; max-height: 200px;" />
                 }
-                <ValidationMessage For="() => Movie.PosterImage" class="text-danger" />
             </div>
 
             <button type="submit" class="btn btn-primary">Create</button>
@@ -67,59 +62,121 @@
 @code {
     [SupplyParameterFromForm]
     private Movie Movie { get; set; } = new();
-    private bool _newPosterUploaded = false;
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
-    private async Task AddMovie()
+    private StreamContent? ﬁleContent; // Nullable StreamContent
+    private string? ﬁleName;
+    private string? imgUrl;
+    private string? imageType;
+
+    // HttpClient is injected by default in Blazor Server/WebAssembly projects
+    // If you are using a diﬀerent setup, you might need to initialize it.
+    [Inject]
+    private HttpClient HttpClient { get; set; }
+
+    protected override void OnInitialized()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Movie.Add(Movie);
-        await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/movies");
+        base.OnInitialized();
+
+        // Initialize HttpClient if not injected
+        httpClient = new HttpClient(); // Only if not using DI
     }
 
-    private async Task HandlePosterUpload(InputFileChangeEventArgs e)
+    private async Task SelectFile(InputFileChangeEventArgs e)
     {
-        var file = e.File;
+        long maxFileSize = 1024 * 1024 * 10;// 10Mb 
 
-        if (file != null)
+        try
         {
-            const long maxFileSize = 1024 * 1024 * 5; // 5 MB
-            if (file.Size > maxFileSize)
+            //Provide the HTTP Content based stream
+            //and open the stream for reading the uploaded file
+            ﬁleContent = new StreamContent(e.File.OpenReadStream(maxFileSize));
+
+            //read file name
+            ﬁleName = e.File.Name;
+
+            //read the file bytes in sequence
+            var fileSize = new byte[e.File.Size];
+            await e.File.OpenReadStream().ReadAsync(fileSize);
+
+            //Read file content type
+            imageType = e.File.ContentType;
+
+            //Create URL for displaying the image preview
+            imgUrl = $"data:{imageType};base64,{Convert.ToBase64String(fileSize)}";
+
+            //Important: do not dispose fileContent here as it will be used later
+            //The using statement in UploadFile will handle the disposal
+
+            this.StateHasChanged();
+        }
+        catch(Exception ex)
+        {
+            //Handle exceptions, e.g., file too large
+            Console.WriteLine($"Error selecting file: {ex.Message}");
+            //You might want to show a user-friendly message here
+        }
+    }
+
+    private async Task SaveMovie()
+    {
+        using var multipartContent = new MultipartFormDataContent();
+
+        //Add movie details to the form data
+
+        // These keys ("title", "genre", "year") should match what your API expects
+
+        //multipartContent.Add(new StringContent(movie.Title ?? ""), "title");
+
+        //multipartContent.Add(new StringContent(movie.Genre ?? ""), "genre");
+
+        //multipartContent.Add(new StringContent(movie.Year.ToString()), "year");
+
+        // Add the ﬁle content if a ﬁle was selected  
+
+        if(ﬁleContent != null && !string.IsNullOrEmpty(ﬁleName))
+        {
+            HttpContent httpFileContent;
+            
+            // Пример, если fileContent - это Stream
+            if (fileContent is Stream stream)
             {
-                Console.WriteLine($"File size too large: {file.Size}");
-                // Здесь нужна обработка ошибки, например, добавить в ValidationMessage
-                return;
+                httpFileContent = new StreamContent(stream);
+                // Опционально: Установите Content-Type, если известно
+                // httpFileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream"); // Или другой MIME-тип
+            }
+            // Пример, если fileContent - это byte[]
+            else if (fileContent is byte[] byteArray && byteArray.Length > 0)
+            {
+                httpFileContent = new ByteArrayContent(byteArray);
+                // Опционально: Установите Content-Type, если известно
+                // httpFileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream"); // Или другой MIME-тип
+            }
+            else
+            {
+                // Обработка ошибки, если тип fileContent не поддерживается
+                // Или если fileContent не является Stream или byte[]
+                throw new InvalidOperationException("Unsupported file content type.");
             }
 
-            using (var memoryStream = new MemoryStream())
-            {
-                await file.OpenReadStream().CopyToAsync(memoryStream);
-                Movie.PosterImage = memoryStream.ToArray();
-                // Получаем MIME-тип файла.
-                // В ASP.NET Core.Components.Forms FileInfo объект сам по себе не хранит MIME-тип.
-                // Для надежности, вам может потребоваться библиотека для определения MIME-типа по содержимому файла,
-                // или полагаться на расширение файла.
-                // Пример с расширением:
-                var extension = Path.GetExtension(file.Name).ToLowerInvariant();
-                string mimeType = extension switch
-                {
-                    ".jpg" => "image/jpeg",
-                    ".jpeg" => "image/jpeg",
-                    ".png" => "image/png",
-                    ".gif" => "image/gif",
-                    ".webp" => "image/webp",
-                    ".bmp" => "image/bmp",
-                    _ => "application/octet-stream"
-                };
-                Movie.PosterMimeType = mimeType; // Сохраняем MIME-тип
-            }
-
-            _newPosterUploaded = true;
+            // The name parameter should match what your API expects for the file field
+            // Убедитесь, что "file" - это правильное имя поля
+            multipartContent.Add(httpFileContent, "file", fileName);
         }
-        else
+        try
         {
-            _newPosterUploaded = false;
+            var response = await httpClient.PostAsync("http://localhost:5000/api/Movies", multipartContent);
+            response.EnsureSuccessStatusCode(); // Проверить на ошибки HTTP
         }
+        catch (HttpRequestException e)
+        {
+            // Обработка ошибок HTTP
+            Console.WriteLine($"Request error: {e.Message}");
+        }
+        catch (Exception e)
+        {
+            // Обработка других ошибок
+            Console.WriteLine($"An error occurred: {e.Message}");
+        }
+
     }
 }

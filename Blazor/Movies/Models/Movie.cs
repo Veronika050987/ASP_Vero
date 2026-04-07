@@ -21,7 +21,7 @@ namespace Movies.Models
 
 		public string? Brief { get; set; }
 
-		public byte[]? PosterImage { get; set; }
-		public string? PosterMimeType { get; set; }
+		//public byte[]? PosterImage { get; set; }
+		//public string? PosterMimeType { get; set; }
 	}
 }
