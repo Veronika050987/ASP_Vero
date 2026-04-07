@@ -123,10 +123,9 @@
 
         //Add movie details to the form data
         // These keys ("title", "genre", "year") should match what your API expects
-        //multipartContent.Add(new StringContent(movie.Title ?? ""), "title");
-        //multipartContent.Add(new StringContent(movie.Genre ?? ""), "genre");
-        //multipartContent.Add(new StringContent(movie.Year.ToString()), "year");
-        // Add the ﬁle content if a ﬁle was selected  
+        multipartContent.Add(new StringContent(Movie.Title ?? ""), "title");
+        multipartContent.Add(new StringContent(Movie.Genre ?? ""), "genre");
+        //Add the ﬁle content if a ﬁle was selected  
 
         if (ﬁleContent != null && !string.IsNullOrEmpty(ﬁleName))
         {

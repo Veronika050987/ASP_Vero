@@ -6,6 +6,9 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
+@inject HttpClient httpClient
+@inject IJSRuntime JSRuntime
+
 <PageTitle>Details</PageTitle>
 
 <h1>"@movie?.Title"</h1>
@@ -28,18 +31,13 @@
                     <dt class="name col-sm-2">URL</dt>              <dd class="value col-sm-10"><a href="@movie.URL">@movie.URL</a></dd>
                 </dl>
             </div>
-            <div style="flex: 1; text-align: center;">
-                @if (movie.PosterImage != null && movie.PosterImage.Length > 0 && !string.IsNullOrEmpty(movie.PosterMimeType))
-                {
-                    var posterBase64 = Convert.ToBase64String(movie.PosterImage);
-                    var dataUrl = $"data:{movie.PosterMimeType};base64,{posterBase64}";
-                    <img src="@dataUrl" alt="Poster" style="max-width: 100%; max-height: 300px; object-fit: contain;" />
-                }
-                else
-                {
-                    <p>No poster available</p>
-                }
-            </div>
+            @if(!string.IsNullOrEmpty(movie.ImageUrl))
+            {
+                <dt class="col-sm-2">Poster</dt>
+                <dd class="col-sm-10"> 
+                    <img src="" alt="Movie Poster" style="max-width:300px; max-height:300px"/>
+                </dd>
+            }
         </div>
         <div>
             <a href="@($"/movies/edit?id={movie.Id}")">Edit</a> |
@@ -56,12 +54,70 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        movie = await context.Movie.FirstOrDefaultAsync(m => m.Id == Id);
+        await LoadMovie();
+    }
 
-        if (movie is null)
+    private async Task LoadMovie()
+    {
+        try
         {
-            NavigationManager.NavigateTo("notfound");
+            //Supposed endpoint for movie details by id
+            var response = await httpClient.GetAsync($"http://localhost:5000/api/Movies/{Id}");
+
+            if(response.IsSuccessStatusCode)
+            {
+                movie = await response.Content.ReadFromJsonAsync<Movie>();
+            }
+            else if(response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                //Movie not found
+                movie = null;//or you can use an error message
+                Console.WriteLine($"Movie with ID {Id} not found");
+            }
+            else
+            {
+                //Other errors
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"API Error loading movie {Id}:{response.StatusCode} - {errorContent}");
+
+                movie = null;
+            }
         }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"An error occured during loading movie: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteMovie()
+    {
+        var confirmResult = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {movie?.Title ?? "this movie"}`?");
+
+        if (confirmResult)
+        {
+            try
+            {
+                //supposed endpoint for delete a movie by id
+                var response = await httpClient.DeleteAsync($"http://localhost:5000/api/Movies/{Id}");
+
+                if(response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Movie deleted successfully!");
+                    NavigationManager.NavigateTo("/movies");//pass to movies list
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"API Error deleting movie {Id}: {response.StatusCode} - {errorContent}");
+                    //Show the message to the user
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occured during deleting movie: {ex.Message}");
+                //Show the message to the user
+            }
+        }
+
     }
 }

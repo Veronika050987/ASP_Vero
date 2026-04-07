@@ -8,6 +8,7 @@
 @rendermode InteractiveServer
 
 @inject HttpClient httpClient
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Edit</PageTitle>
 
@@ -47,19 +48,19 @@ else
                     <InputText id="url" @bind-Value="Movie.URL" class="form-control" />
                     <ValidationMessage For="() => Movie.URL" class="text-danger" />
                 </div>
-                <div class="mb-3">
-                    <label for="poster" class="form-label">Poster:</label>
-                    <InputFile id="poster" OnChange="HandlePosterUpload" class="form-control" />
-                    @if (Movie.PosterImage != null && Movie.PosterImage.Length > 0)
+                    <label for="movieImage">Movie Image (Upload new to replace):</label>
+                    <InputFile OnChange="SelectFile" id="movieImage" />
+                    @if (!string.IsNullOrEmpty(Movie.ImageUrl))
                     {
-                        var currentPosterBase64 = Convert.ToBase64String(Movie.PosterImage);
-                        <img src="" alt="Current Poster" style="max-width: 200px; margin-top: 10px;" />
+                        <p>Current Image:</p>
+                        <img src="" alt="Current Movie Image" style="max-width: 200px; max-height: 200px;" />
                     }
-                    <ValidationMessage For="() => Movie.PosterImage" class="text-danger" />
-                </div>
-
-
-                <button type="submit" class="btn btn-primary">Save</button>
+                    @if (!string.IsNullOrEmpty(Movie.ImageUrl))
+                    {
+                        <p>New Image Preview:</p>
+                        <img src="" alt="Selected New Movie Image" style="max-width: 200px; max-height: 200px;" />
+                    }
+                <button type="submit" class="btn btn-primary">Update Movie</button>
             </EditForm>
         </div>
     </div>
@@ -76,129 +77,126 @@ else
     [SupplyParameterFromForm]
     private Movie? Movie { get; set; }
 
-    // Флаг, указывающий, был ли загружен новый постер
-    private bool _newPosterUploaded = false;
+    private StreamContent? fileContent;
+    private string? fileName;
+    private string? imageUrl;
+    private string? imageType;
+    private string? originalImageUrl; //to store the URL of the existing image
+
+
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        Movie ??= await context.Movie.FirstOrDefaultAsync(m => m.Id == Id);
-
-        if (Movie is null)
-        {
-            NavigationManager.NavigateTo("notfound");
-        }
+        await LoadMovieForEditing();
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task LoadMovieForEditing()
+    {
+        try
+        {
+            var response = await httpClient.GetAsync($"http://localhost:5000/api/Movies/{Id}");
+
+            if(response.IsSuccessStatusCode)
+            {
+                Movie = await response.Content.ReadFromJsonAsync<Movie>();
+            }
+
+            else
+            {
+                Console.WriteLine($"API Errorloading movie {Id} for editing: {response.StatusCode}");
+                Movie = null;
+            }
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"An error occured during loading movie for editing: {ex.Message}");
+            Movie = null;
+        }
+    }
+    private async Task SelectFile(InputFileChangeEventArgs e)
+    {
+        long maxFileSize = 1024 * 1024 * 10;
+
+        try
+        {
+            fileContent = new StreamContent(e.File.OpenReadStream(maxFileSize));
+
+            fileName = e.File.Name;
+            imageType = e.File.ContentType;
+
+            var fileSize = new byte[e.File.Size];
+            await e.File.OpenReadStream().ReadAsync(fileSize);
+            imageUrl = $"data:{imageType};base64,{Convert.ToBase64String(fileSize)}";
+
+            // Important: Do not dispose ﬁleContent here
+            this.StateHasChanged();
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"Error selecting ﬁle: {ex.Message}");
+
+            // Show user-friendly error 
+        }
+    }
     private async Task UpdateMovie()
     {
-        if (Movie is null) return; // На всякий случай
+        using var multipartContent = new MultipartFormDataContent();
 
-        using var context = DbFactory.CreateDbContext();
-        // context.Attach(Movie!).State = EntityState.Modified;
-        var existingMovie = await context.Movie.FindAsync(Movie.Id);// Находим сущность по Id
+        // Add updated movie details
+        multipartContent.Add(new StringContent(Movie.Title ?? ""), "title");
 
-        if (existingMovie != null)
+        multipartContent.Add(new StringContent(Movie.Genre ?? ""), "genre");
+
+        // Add the new image if one was selected
+        if(fileContent != null && !string.IsNullOrEmpty(fileName))
         {
-            // Обновляем поля, кроме постера, если новый не был загружен
-            existingMovie.Title = Movie.Title;
-            existingMovie.ReleaseDate = Movie.ReleaseDate;
-            existingMovie.Genre = Movie.Genre;
-            existingMovie.URL = Movie.URL;
-
-            // Если был загружен новый постер, обновляем его
-            if (_newPosterUploaded && Movie.PosterImage != null)
-            {
-                existingMovie.PosterImage = Movie.PosterImage;
-            }
-            // Если новый постер не был загружен, existingMovie.Poster остается прежним.
-
-            // Отмечаем, что сущность изменена
-            context.Update(existingMovie);
-
-            try
-            {
-                await context.SaveChangesAsync();
-                // Перенаправляем на страницу деталей после успешного сохранения
-                NavigationManager.NavigateTo($"/movies/details?id={Movie.Id}");
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MovieExists(Movie.Id))
-                {
-                    NavigationManager.NavigateTo("notfound");
-                }
-                else
-                {
-                    // Обработка других ошибок конкуренции или ошибок сохранения
-                    // Можно обновить UI или вывести сообщение пользователю
-                    throw; // Перебрасываем исключение, если не можем обработать
-                }
-            }
-            catch (Exception ex)
-            {
-                // Обработка других возможных исключений при сохранении
-                Console.WriteLine($"Error saving movie: {ex.Message}");
-                // Можно обновить UI или вывести сообщение пользователю
-            }
+            multipartContent.Add(fileContent, "file", fileName);
         }
         else
         {
-            // Фильм не найден для обновления
-            NavigationManager.NavigateTo("notfound");
-        }
-    }
+            //if no new image was uploaded we still need to send the original URL
+            //so the backend knows not to remove the existing image
+            //If your API expects null for no image adjust this.
+            //For simplicity we are not explicitly sending originalImageUrl here,
+            //assuming the backend handles cases where "ﬁle" is not present.
+            //If your API requires it, you might need a separate ﬁeld for originalImageUrl
+            //or handle it diﬀerently.
 
-    private async Task HandlePosterUpload(InputFileChangeEventArgs e)
-    {
-        var file = e.File;
-
-        if (file != null)
-        {
-            const long maxFileSize = 1024 * 1024 * 5; // 5 MB
-            if (file.Size > maxFileSize)
+            if(!string.IsNullOrEmpty(originalImageUrl))
             {
-                Console.WriteLine($"File size too large: {file.Size}");
-                // Здесь нужна обработка ошибки, например, добавить в ValidationMessage
-                return;
+                //This is a common scenario: send the new ﬁle if available.
+                //If no new ﬁle, the backend should ideally use the existing one.
+                //If your API design requires sending the original URL to keep it,
+                //you'd add it as another StringContent.
             }
-
-            using (var memoryStream = new MemoryStream())
-            {
-                await file.OpenReadStream().CopyToAsync(memoryStream);
-                Movie.PosterImage = memoryStream.ToArray();
-                // Получаем MIME-тип файла.
-                // В ASP.NET Core.Components.Forms FileInfo объект сам по себе не хранит MIME-тип.
-                // Для надежности, вам может потребоваться библиотека для определения MIME-типа по содержимому файла,
-                // или полагаться на расширение файла.
-                // Пример с расширением:
-                var extension = Path.GetExtension(file.Name).ToLowerInvariant();
-                string mimeType = extension.ToLowerInvariant() switch
-                {
-                    ".jpg" => "image/jpeg", 
-                    ".jpeg" => "image/jpeg", 
-                    ".png" => "image/png", 
-                    ".gif" => "image/gif", 
-                    ".webp" => "image/webp", 
-                    ".bmp" => "image/bmp", 
-                    _ => "application/octet-stream"
-                };
-                Movie.PosterMimeType = mimeType; // Сохраняем MIME-тип
-            }
-
-            _newPosterUploaded = true;
         }
-        else
+        try
         {
-            _newPosterUploaded = false;
-        }
-    }
+            //supported endpoint for movi update by ID
+            var response = await httpClient.PutAsync($"http://localhost:5000/api/Movies/{Id}", multipartContent);
 
-    private bool MovieExists(int id)
-    {
-        using var context = DbFactory.CreateDbContext();
-        return context.Movie.Any(e => e.Id == id);
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Movie updated successfully!");
+                NavigationManager.NavigateTo($"/movies/details/{Id}");//details
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"API Error updating movie {Id}: {response.StatusCode} - {errorContent}"); 
+                //Message for a user
+            }
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine($"An error occurred updating movie: {ex.Message}");
+            //Message for a user
+        }
+        finally
+        {
+            //Dispose StreamContent afer the request is sent
+            fileContent?.Dispose();
+            fileContent = null;
+        }
     }
 }
