@@ -31,7 +31,7 @@
         </dl>
         <ul>
             <h3>Студенты</h3>
-            @foreach(Student student in group.Students)
+            @foreach(Human student in group.Students)
             {
                 <li>@student.last_name @student.first_name @student.middle_name</li>
             }
