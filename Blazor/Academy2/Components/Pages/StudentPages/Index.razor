@@ -36,7 +36,7 @@ using System.Linq.Expressions.Expression
         <PropertyColumn Sortable="true" Property="s => s.first_name" Title="Имя" />
         <PropertyColumn Sortable="true" Property="s => s.middle_name" Title="Отчество" />
         <PropertyColumn Sortable="true" Property="s => s.birth_date" Title="Дата рождения" />        
-        <PropertyColumn Sortable="true" Property="s => s.Group.group_name" Title="Группа" />
+        @* <PropertyColumn Sortable="true" Property="s => s.Group.group_name" Title="Группа" /> *@
         <TemplateColumn Title="Группа"
 						Sortable="true"
                         InitialSortDirection="SortDirection.Ascending"
