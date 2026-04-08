@@ -95,7 +95,7 @@ using System.Linq.Expressions.Expression
 
         private IComparable GroupNameForSorting(Student s)
         {           
-                return s?.Group?.group_name??"N/A";
+            return s?.Group?.group_name??"N/A";
         }
 
         private IComparable AgeForSorting(Student s)
