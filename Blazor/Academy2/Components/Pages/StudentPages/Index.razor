@@ -36,39 +36,24 @@ using System.Linq.Expressions.Expression
         <PropertyColumn Sortable="true" Property="s => s.first_name" Title="Имя" />
         <PropertyColumn Sortable="true" Property="s => s.middle_name" Title="Отчество" />
         <PropertyColumn Sortable="true" Property="s => s.birth_date" Title="Дата рождения" />        
-        @* <PropertyColumn Sortable="true" Property="s => s.Group.group_name" Title="Группа" /> *@
-        <TemplateColumn Title="Группа"
+        <PropertyColumn Sortable="true" Property="s => s.Group.group_name" Title="Группа" />
+    @*     <TemplateColumn Title="Группа"
 						Sortable="true"
                         InitialSortDirection="SortDirection.Ascending"
-                        SortBy="GroupNameForSorting"
+                        SortBy="@((Student s) => s?.Group.group_name ?? "N/A")"
                         Context="student"
 						TGridItem="Student">
-                @(student.Group?.group_name ?? "N/A")
-         
-        </TemplateColumn>
+                        @(student.Group?.group_name ?? "N/A")
+        </TemplateColumn> *@
+
 		<TemplateColumn Title="Возраст" 
                         Sortable="true"
 						InitialSortDirection="SortDirection.Ascending"
                         IsDefaultSortColumn="true"
-                        SortBy="AgeForSorting"
                         Context="student"
                         TGridItem="Student">
-            @{
-                DateOnly birthDateOnly = student.birth_date;
-
-                DateTime birthDate = new DateTime(birthDateOnly.Year, birthDateOnly.Month, birthDateOnly.Day);
-
-                var today = DateTime.Today;
-                var age = today.Year - birthDate.Year;
-
-                if(birthDate.DayOfYear > today.DayOfYear)
-                {
-                    age--;
-                }
-                @age;
-            }
+                        @CalculateAgeDisplay(student)               
         </TemplateColumn>
-
         <TemplateColumn Context="student" TGridItem="Student">
             @*   <a href="@($"students/edit?stud_id={student.stud_id}")">Edit</a> | *@
             <a href="@($"students/details?stud_id={student.stud_id}")">Details</a>
@@ -93,25 +78,27 @@ using System.Linq.Expressions.Expression
         Students = context.Students.Include(s => s.Group).AsNoTracking();
     }
 
-        private IComparable GroupNameForSorting(Student s)
-        {           
-            return s?.Group?.group_name??"N/A";
-        }
-
-        private IComparable AgeForSorting(Student s)
-        {
-            if (s == null)
+    private int CalculateAge(Student? s)
+    {
+        if (s == null || s.birth_date == default)
             return 0;
 
-            DateOnly birthDateOnly = s.birth_date;
-            DateTime birthDate = new DateTime(birthDateOnly.Year, birthDateOnly.Month, birthDateOnly.Day);
-            var today = DateTime.Today;
-            var age = today.Year - birthDate.Year;
+        DateOnly birthDateOnly = s.birth_date;
+        DateTime birthDate = new DateTime(birthDateOnly.Year, birthDateOnly.Month, birthDateOnly.Day);
+        var today = DateTime.Today;
+        var age = today.Year - birthDate.Year;
 
-            if (birthDate.DayOfYear > today.DayOfYear)
+        if(birthDate.DayOfYear > today.DayOfYear)
+        {
             age--;
-            return age;
         }
+        return age;
+    }
+
+    private string CalculateAgeDisplay(Student student)
+    {
+        return CalculateAge(student).ToString();
+    }
 
     private IQueryable<Student> FilteredStudents
     {
