@@ -10,5 +10,6 @@ namespace Academy2.Components.Models
 		public int teacher_id { get; set; }
 		public DateOnly work_since { get; set; } = default!;
 		public decimal rate { get; set; }
+		public byte[] PhotoData { get; set; }
 	}
 }

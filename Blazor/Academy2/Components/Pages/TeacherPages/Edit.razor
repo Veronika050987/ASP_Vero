@@ -76,9 +76,17 @@ else
                         </div>
                     </div>
                     <div class="photo-container">
-                        <Photo url="@url" />
-                        @url.Name
+                        @if (Teacher?.PhotoData != null && Teacher.PhotoData.Length > 0)
+                        {
+                            var base64 = Convert.ToBase64String(Teacher.PhotoData);
+                            var imgSrc = $"data:image/jpeg;base64,{base64}";
+                            <img src="" alt="Teacher photo" style="max-width:200px" />
+                        }
                         <InputFile OnChange="LoadPhoto"/>
+                        @if (newPhotoSelected)
+                        {
+                            <p>New photo selected: @selectedFileName</p>
+                        }
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
@@ -97,10 +105,17 @@ else
 
     [SupplyParameterFromForm]
     private Teacher? Teacher { get; set; }
-    IBrowserFile url { get; set; }
+
+    private IBrowserFile? newPhotoFile;
+    private bool newPhotoSelected = false;
+    private string? selectedFileName;
+
     void LoadPhoto(InputFileChangeEventArgs e)
     {
-        url = e.File;
+        newPhotoFile = e.File;
+        selectedFileName = e.File.Name;
+        newPhotoSelected = true;
+        StateHasChanged();
     }
 
     protected override async Task OnInitializedAsync()
@@ -120,6 +135,27 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         context.Attach(Teacher!).State = EntityState.Modified;
+
+        if(Teacher is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+            return;
+        }
+
+        if (newPhotoFile != null)
+        {
+            using var memoryStream = new MemoryStream();
+            await newPhotoFile.OpenReadStream().CopyToAsync(memoryStream);
+            Teacher.PhotoData = memoryStream.ToArray();
+            newPhotoFile = null;
+            newPhotoSelected = false;
+            selectedFileName = null;
+        }
+
+        if (Teacher.teacher_id == 0)
+            context.Teachers.Add(Teacher);
+        else
+            context.Attach(Teacher).State = EntityState.Modified;
 
         try
         {
