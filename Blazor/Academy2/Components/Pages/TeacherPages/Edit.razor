@@ -76,8 +76,12 @@ else
                         </div>
                     </div>
                     <div class="photo-container">
+                        @if(Teacher.photo != null)
+                        {
                         <Photo url="@url" />
-                        @url.Name
+                        @* @url.Name *@
+                        <img src="data:image;base64,@Convert.ToBase64String(Teacher.photo)"/>
+                        }
                         <InputFile OnChange="LoadPhoto"/>
                     </div>
                 </div>
@@ -98,9 +102,12 @@ else
     [SupplyParameterFromForm]
     private Teacher? Teacher { get; set; }
     IBrowserFile url { get; set; }
-    void LoadPhoto(InputFileChangeEventArgs e)
+    async Task LoadPhoto(InputFileChangeEventArgs e)
     {
         url = e.File;
+        MemoryStream ms = new MemoryStream();
+        await url.OpenReadStream(1024*1024*10).CopyToAsync(ms);
+        Teacher.photo = ms.ToArray();
     }
 
     protected override async Task OnInitializedAsync()
