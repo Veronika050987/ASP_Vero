@@ -1,0 +1,25 @@
+﻿EditForm {
+    width: 100%;
+}
+
+.human-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+.human-container dl
+{
+    width:50%;
+}
+
+.photo-container {
+    width: 40%;
+}
+.col-sm-2
+{
+    width:30%;
+}
+.col-sm-10
+{
+    width:70%;
+}

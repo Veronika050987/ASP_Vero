@@ -3,41 +3,51 @@
 @using Academy2.Components.Models
 @inject IDbContextFactory<Academy2.Data.Academy2Context> DbFactory
 @inject NavigationManager NavigationManager
+@using Academy2.Components.Pages.TeacherPages
 
 <PageTitle>Details</PageTitle>
 
-<h1>Details</h1>
-
+<h3>Student Details</h3>
+<div class="human-container">
+    @if (student != null)
+    {
+    <div>
+        <a href="@($"/students/edit?stud_id={student.stud_id}")">Edit</a> |
+        <a href="@($"/students")">Back to List</a>
+    </div>
+    }
+</div>
 <div>
-    <h2>Student</h2>
+    <h2></h2>
+
     <hr />
     @if (student is null)
     {
         <p><em>Loading...</em></p>
     }
     else {
-        <dl class="row">
-            <dt class="col-sm-2">last_name</dt>
-            <dd class="col-sm-10">@student.last_name</dd>
-            <dt class="col-sm-2">first_namw</dt>
-            <dd class="col-sm-10">@student.first_name</dd>
-            <dt class="col-sm-2">middle_name</dt>
-            <dd class="col-sm-10">@student.middle_name</dd>
-            <dt class="col-sm-2">birth_date</dt>
-            <dd class="col-sm-10">@student.birth_date</dd>
-            <dt class="col-sm-2">email</dt>
-            <dd class="col-sm-10">@student.email</dd>
-            <dt class="col-sm-2">phone</dt>
-            <dd class="col-sm-10">@student.phone</dd>
-            <dt class="col-sm-2">photo</dt>
-            <dd class="col-sm-10">@student.photo</dd>
-            <dt class="col-sm-2">group</dt>
-            <dd class="col-sm-10">@student.Group.group_name</dd>
-        </dl>
-        <div>
-            <a href="@($"/students/edit?stud_id={student.stud_id}")">Edit</a> |
-            <a href="@($"/students")">Back to List</a>
+        <div class="human-container">
+            <dl class="row">
+                <dt class="col-sm-2">last_name</dt>
+                <dd class="col-sm-10">@student.last_name</dd>
+                <dt class="col-sm-2">first_namw</dt>
+                <dd class="col-sm-10">@student.first_name</dd>
+                <dt class="col-sm-2">middle_name</dt>
+                <dd class="col-sm-10">@student.middle_name</dd>
+                <dt class="col-sm-2">birth_date</dt>
+                <dd class="col-sm-10">@student.birth_date</dd>
+                <dt class="col-sm-2">email</dt>
+                <dd class="col-sm-10">@student.email</dd>
+                <dt class="col-sm-2">phone</dt>
+                <dd class="col-sm-10">@student.phone</dd>
+                @* <dt class="col-sm-2">photo</dt>
+                <dd class="col-sm-10">@student.photo</dd> *@
+                <dt class="col-sm-2">group</dt>
+                <dd class="col-sm-10">@student.Group.group_name</dd>
+            </dl>
+            <Photo Human="student" allow_change=false />
         </div>
+      
     }
 </div>
 
