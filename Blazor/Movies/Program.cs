@@ -18,8 +18,8 @@ builder.Services.Configure<FormOptions>(options =>
 	options.ValueLengthLimit = int.MaxValue;
 });
 
-builder.Services.AddDbContextFactory<MoviesContext>(options =>
-	options.UseSqlServer(builder.Configuration.GetConnectionString("MoviesContext") ?? throw new InvalidOperationException("Connection string 'MoviesContext' not found.")));
+//builder.Services.AddDbContextFactory<MoviesContext>(options =>
+//	options.UseSqlServer(builder.Configuration.GetConnectionString("MoviesContext") ?? throw new InvalidOperationException("Connection string 'MoviesContext' not found.")));
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
@@ -45,6 +45,17 @@ builder.Services.AddSwaggerGen(options => {
 });
 
 builder.Services.AddEndpointsApiExplorer();
+/*/ ---ДОБАВЛЕНИЕ CORS-- */ 	
+builder.Services.AddCors(options => {
+options.AddPolicy("cors", policy => {
+policy.AllowAnyOrigin()
+	// Разрешает запросы с любых источников
+.AllowAnyMethod()  
+	// Разрешает любые HTTP методы (GET, POST, PUT, DELETE и т.д.)
+.AllowAnyHeader(); 
+	// Разрешает любые HTTP заголовки
+});});// --- КОНЕЦ ДОБАВЛЕНИЯ CORS
+
 var app = builder.Build();
 
 // 3. Создание папки для загрузок
@@ -60,7 +71,11 @@ if (!app.Environment.IsDevelopment())
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
-
+app.UseHttpsRedirection();
+/// ---ИСПОЛЬЗОВАНИЕ CORS MIDDLEWARE ---
+// Обычно CORS middleware размещают перед middleware, которые могут быть вызваны извне
+// (например, контроллеры, статические файлы)
+app.UseCors("cors");
 // 5. Статические файлы (стандартные + папка Uploads)
 app.UseStaticFiles();
 
@@ -70,7 +85,6 @@ app.UseStaticFiles(new StaticFileOptions
 	FileProvider = new PhysicalFileProvider(uploadFolder),
 	RequestPath = "/Uploads"
 });
-app.UseHttpsRedirection();
 
 app.MapControllers();
 

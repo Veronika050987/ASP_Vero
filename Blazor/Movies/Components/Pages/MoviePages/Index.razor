@@ -67,7 +67,8 @@
 
 	PaginationState pagination = new PaginationState { ItemsPerPage = 5 };
 
-	protected override void OnInitialized()
+	// protected override void OnInitialized()
+	protected override async Task OnInitializedAsync()
 	{
 		context = DbFactory.CreateDbContext();
 	}
