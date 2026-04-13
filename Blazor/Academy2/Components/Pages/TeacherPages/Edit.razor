@@ -125,7 +125,6 @@ else
         public bool Selected { get; set; }
     }
 
-    // Ваши свойства для DbSet
     private DbSet<Discipline>? Disciplines { get; set; }
     private DbSet<TeacherDisciplineRelation>? TDR { get; set; }
 
@@ -144,7 +143,6 @@ else
             return;
         }
 
-        // Initialize Items with disciplines
         Items = await context.Disciplines.Select(d => new MultiSelectListItem
         {
             Value = d.discipline_id.ToString(),
@@ -168,19 +166,17 @@ else
 
         context.Attach(Teacher!).State = EntityState.Modified;
 
-        // Clear existing relationships
         var existingRels = await context.TeachersDisciplinesRelation
             .Where(r => r.teacher == Teacher.teacher_id).ToListAsync();
 
         context.TeachersDisciplinesRelation.RemoveRange(existingRels);
 
-        // Add updated relationships based on selected items
         foreach (var item in Items.Where(i => i.Selected))
         {
             context.TeachersDisciplinesRelation.Add(new TeacherDisciplineRelation
             {
                 teacher = Teacher.teacher_id,
-                discipline = int.Parse(item.Value) // Convert the value back to int
+                discipline = int.Parse(item.Value)
             });
         }
 
