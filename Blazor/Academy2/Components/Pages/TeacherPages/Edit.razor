@@ -11,6 +11,7 @@
 
 <h2>Teacher</h2>
 <hr />
+
 @if (Teacher is null)
 {
     <p><em>Loading...</em></p>
@@ -84,12 +85,21 @@ else
                         
                         @* <InputFile OnChange="LoadPhoto"/> *@
                     </div>
-                    <InputSelect @bind-Value="discipline">
-                        @foreach(Discipline d in Disciplines)
-                        {
-                            <option value="@d.discipline_id">@d.discipline_name</option>
-                        }
-                    </InputSelect>
+                    <div class="multiselect">
+                        <div id="checkboxes">
+                            @foreach (var item in Items)
+                            {
+                                <div>
+                                    <label for="@item.Value">
+                                        <input type="checkbox" id="@item.Value"
+                                               checked="@item.Selected"
+                                               @onchange="@((e) => CheckboxChanged(e, item.Value))" />
+                                        @item.Text
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
@@ -102,66 +112,79 @@ else
 </div>
 
 @code {
-    [SupplyParameterFromQuery]
-    private int teacher_id { get; set; }
+    [Parameter]
+    public List<MultiSelectListItem> Items { get; set; } = new();
 
-    [SupplyParameterFromForm]
-    private Teacher? Teacher { get; set; }
-    DbSet<Discipline>? Disciplines { get; set; }
-    DbSet<TeacherDisciplineRelation>? TDR { get; set; }
-    int discipline;
-    // IBrowserFile url { get; set; }
-    // async Task LoadPhoto(InputFileChangeEventArgs e)
-    // {
-    //     url = e.File;
-    //     MemoryStream ms = new MemoryStream();
-    //     await url.OpenReadStream(1024*1024*10).CopyToAsync(ms);
-    //     Teacher.photo = ms.ToArray();
-    // }
+    [Parameter] public int teacher_id { get; set; }
+    [SupplyParameterFromForm] private Teacher? Teacher { get; set; }
+
+    public class MultiSelectListItem
+    {
+        public string Value { get; set; } = null!;
+        public string Text { get; set; } = null!;
+        public bool Selected { get; set; }
+    }
+
+    // Ваши свойства для DbSet
+    private DbSet<Discipline>? Disciplines { get; set; }
+    private DbSet<TeacherDisciplineRelation>? TDR { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        Teacher ??= await context.Teachers.FirstOrDefaultAsync(m => m.teacher_id == teacher_id);
+        var context = DbFactory.CreateDbContext();
 
         Disciplines = context.Disciplines;
-
         TDR = context.TeachersDisciplinesRelation;
+
+        Teacher ??= await context.Teachers.FirstOrDefaultAsync(m => m.teacher_id == teacher_id);
+
         if (Teacher is null)
         {
             NavigationManager.NavigateTo("notfound");
+            return;
+        }
+
+        // Initialize Items with disciplines
+        Items = await context.Disciplines.Select(d => new MultiSelectListItem
+        {
+            Value = d.discipline_id.ToString(),
+            Text = d.discipline_name,
+            Selected = context.TeachersDisciplinesRelation.Any(r => r.teacher == Teacher.teacher_id && r.discipline == d.discipline_id)
+        }).ToListAsync();
+    }
+
+    private void CheckboxChanged(ChangeEventArgs e, string key)
+    {
+        var item = Items.FirstOrDefault(i => i.Value == key);
+        if (item != null)
+        {
+            item.Selected = (bool)e.Value;
         }
     }
 
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateTeacher()
     {
         using var context = DbFactory.CreateDbContext();
+
         context.Attach(Teacher!).State = EntityState.Modified;
 
-        try
+        // Clear existing relationships
+        var existingRels = await context.TeachersDisciplinesRelation
+            .Where(r => r.teacher == Teacher.teacher_id).ToListAsync();
+
+        context.TeachersDisciplinesRelation.RemoveRange(existingRels);
+
+        // Add updated relationships based on selected items
+        foreach (var item in Items.Where(i => i.Selected))
         {
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!TeacherExists(Teacher!.teacher_id))
+            context.TeachersDisciplinesRelation.Add(new TeacherDisciplineRelation
             {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
+                teacher = Teacher.teacher_id,
+                discipline = int.Parse(item.Value) // Convert the value back to int
+            });
         }
 
+        await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/teachers");
-    }
-
-    private bool TeacherExists(int teacher_id)
-    {
-        using var context = DbFactory.CreateDbContext();
-        return context.Teachers.Any(e => e.teacher_id == teacher_id);
     }
 }
