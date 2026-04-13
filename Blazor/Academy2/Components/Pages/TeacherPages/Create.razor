@@ -72,6 +72,12 @@
                 <div class="photo-container">
                     <Photo Human="@Teacher" allow_change=true />
                 </div>
+                <InputSelect @bind-Value="discipline">
+                    @foreach (Discipline d in Disciplines)
+                    {
+                        <option value="@d.discipline_id">@d.discipline_name</option>
+                    }
+                </InputSelect>
             </div>
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
@@ -86,6 +92,11 @@
     [SupplyParameterFromForm]
     private Teacher Teacher { get; set; } = new();
 
+    [SupplyParameterFromQuery]
+    private int teacher_id { get; set; }
+    DbSet<Discipline>? Disciplines { get; set; }
+    DbSet<TeacherDisciplineRelation>? TDR { get; set; }
+    int discipline;
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddTeacher()
     {
