@@ -12,6 +12,11 @@ namespace Academy2.Components.Models
 		public decimal rate { get; set; }
 
 		//Navigation properties:
-		public ICollection<TeacherDisciplineRelation> DisciplinesRelations { get; set; } = default!;
+		public ICollection<TeacherDisciplineRelation> DisciplinesRelations { get; set; } = new List<TeacherDisciplineRelation>();
+		[NotMapped]
+		public List<int> SelectedDisciplineIds { get; set; } = new List<int>();
+		[NotMapped]
+		[Required(ErrorMessage = "Please select at least one discipline.")]
+		public List<string> SelectedDisciplineIdsAsString { get; set; } = new List<string>();
 	}
 }

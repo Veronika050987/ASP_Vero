@@ -72,12 +72,20 @@
                 <div class="photo-container">
                     <Photo Human="@Teacher" allow_change=true />
                 </div>
-                <InputSelect @bind-Value="discipline">
-                    @foreach (Discipline d in Disciplines)
-                    {
-                        <option value="@d.discipline_id">@d.discipline_name</option>
-                    }
-                </InputSelect>
+                <div class="mb-3">
+                    <label for="disciplines">Disciplines</label>
+                    <InputSelect @bind-Value="Teacher.SelectedDisciplineIdsAsString" multiple="true" class="form-control" id="disciplines">
+                        <option value="" disabled>Please, choose a discipline</option>
+                        @if(Disciplines != null)
+                        {
+                            @foreach (Discipline d in Disciplines)
+                            {
+                                <option value="@d.discipline_id.ToString()">@d.discipline_name</option>
+                            }                            
+                        }
+                    </InputSelect>
+@*                     <ValidationMessage For="() => Teacher.SelectedDisciplineIdsAsString" class="text-danger" />
+ *@                </div>
             </div>
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
@@ -92,17 +100,57 @@
     [SupplyParameterFromForm]
     private Teacher Teacher { get; set; } = new();
 
-    [SupplyParameterFromQuery]
-    private int teacher_id { get; set; }
-    DbSet<Discipline>? Disciplines { get; set; }
-    DbSet<TeacherDisciplineRelation>? TDR { get; set; }
-    int discipline;
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private List<Discipline> Disciplines { get; set; } = new();
+
+    private List<string>? SelectedDisciplineIdsAsString { get; set; } = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        Disciplines = await context.Disciplines.ToListAsync();
+
+        if (Teacher.teacher_id != 0)
+        {
+            Teacher.SelectedDisciplineIdsAsString = Teacher.SelectedDisciplineIds
+                .Select(id => id.ToString()).ToList();
+        }
+    }
+
     private async Task AddTeacher()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Teachers.Add(Teacher);
+        using var context = await DbFactory.CreateDbContextAsync();
+
+        Teacher.SelectedDisciplineIds = Teacher.SelectedDisciplineIdsAsString.Select(int.Parse).ToList();
+
+
+        if (Teacher.teacher_id == 0)
+        {
+            context.Teachers.Add(Teacher);
+        }
+        else
+        {
+            context.Teachers.Update(Teacher);
+
+            // Удаляем старые связи перед добавлением новых
+            var oldRelations = context.TeachersDisciplinesRelation
+                .Where(r => r.teacher == Teacher.teacher_id);
+            context.TeachersDisciplinesRelation.RemoveRange(oldRelations);
+        }
+
         await context.SaveChangesAsync();
+
+        // 3. Добавляем связи (после SaveChanges у Teacher есть ID)
+        foreach (var disciplineId in Teacher.SelectedDisciplineIds)
+        {
+            context.TeachersDisciplinesRelation.Add(new TeacherDisciplineRelation
+            {
+                teacher = Teacher.teacher_id,
+                discipline = disciplineId
+            });
+        }
+
+        await context.SaveChangesAsync();
+
         NavigationManager.NavigateTo("/teachers");
     }
 }
