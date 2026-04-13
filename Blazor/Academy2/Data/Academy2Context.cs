@@ -18,5 +18,9 @@ namespace Academy2.Data
         public DbSet<Academy2.Components.Models.Group> Groups { get; set; } = default!;
         public DbSet<Academy2.Components.Models.Student> Students { get; set; } = default!;
         public DbSet<Academy2.Components.Models.Teacher> Teachers { get; set; } = default!;
+        public DbSet<Academy2.Components.Models.Discipline> Disciplines { get; set; } = default!;
+        public DbSet<Academy2.Components.Models.TeacherDisciplineRelation> TeachersDisciplinesRelation{ get; set; } = default!;
+
+
     }
 }

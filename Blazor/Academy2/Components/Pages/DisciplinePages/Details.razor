@@ -1,0 +1,72 @@
+﻿@page "/disciplines/details"
+@using Microsoft.EntityFrameworkCore
+@using Academy2.Components.Models
+@inject IDbContextFactory<Academy2.Data.Academy2Context> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Discipline</h2>
+    <hr />
+    @if (discipline is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">discipline_name</dt>
+            <dd class="col-sm-10">@discipline.discipline_name</dd>
+            <dt class="col-sm-2">number_of_lessons</dt>
+            <dd class="col-sm-10">@discipline.number_of_lessons</dd>
+        </dl>
+        <div>
+            <h5>Количество преподавателей: @discipline.TeachersRelations.Count</h5>
+            <ul>
+                @foreach(TeacherDisciplineRelation tr in discipline.TeachersRelations)
+                {
+                    <li>
+                        @tr.Teacher.last_name @tr.Teacher.first_name @tr.Teacher.middle_name
+                    </li>
+                }
+            </ul>
+        </div>
+        <div>
+            <a href="@($"/disciplines/edit?discipline_id={discipline.discipline_id}")">Edit</a> |
+            <a href="@($"/disciplines")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Discipline? discipline;
+
+    [SupplyParameterFromQuery]
+    private int discipline_id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        discipline = await context
+                    .Disciplines
+                    // .Include(d => d.Teachers)
+                    .Include(d => d.TeachersRelations)
+                    .ThenInclude(tr => tr.Teacher)
+                    .FirstOrDefaultAsync(m => m.discipline_id == discipline_id);
+
+        // discipline = await context
+        //         .Disciplines
+        //         .Where(d => d.discipline_id == discipline_id)
+        //         .Include(d => d.TeachersRelations)
+        //         .Include(d => d.Teachers)
+        //         .FirstOrDefaultAsync();
+
+
+        if (discipline is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}
