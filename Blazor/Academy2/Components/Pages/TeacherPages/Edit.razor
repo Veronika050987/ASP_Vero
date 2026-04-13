@@ -84,6 +84,12 @@ else
                         
                         @* <InputFile OnChange="LoadPhoto"/> *@
                     </div>
+                    <InputSelect @bind-Value="discipline">
+                        @foreach(Discipline d in Disciplines)
+                        {
+                            <option value="@d.discipline_id">@d.discipline_name</option>
+                        }
+                    </InputSelect>
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
@@ -101,6 +107,9 @@ else
 
     [SupplyParameterFromForm]
     private Teacher? Teacher { get; set; }
+    DbSet<Discipline>? Disciplines { get; set; }
+    DbSet<TeacherDisciplineRelation>? TDR { get; set; }
+    int discipline;
     // IBrowserFile url { get; set; }
     // async Task LoadPhoto(InputFileChangeEventArgs e)
     // {
@@ -115,6 +124,9 @@ else
         using var context = DbFactory.CreateDbContext();
         Teacher ??= await context.Teachers.FirstOrDefaultAsync(m => m.teacher_id == teacher_id);
 
+        Disciplines = context.Disciplines;
+
+        TDR = context.TeachersDisciplinesRelation;
         if (Teacher is null)
         {
             NavigationManager.NavigateTo("notfound");
