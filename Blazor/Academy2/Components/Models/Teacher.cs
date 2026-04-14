@@ -14,9 +14,10 @@ namespace Academy2.Components.Models
 		//Navigation properties:
 		public ICollection<TeacherDisciplineRelation> DisciplinesRelations { get; set; } = new List<TeacherDisciplineRelation>();
 		[NotMapped]
+		[Required(ErrorMessage = "Please select at least one discipline.")]
 		public List<int> SelectedDisciplineIds { get; set; } = new List<int>();
 		[NotMapped]
-		[Required(ErrorMessage = "Please select at least one discipline.")]
+		//[Required(ErrorMessage = "Please select at least one discipline.")]
 		public List<string> SelectedDisciplineIdsAsString { get; set; } = new List<string>();
 	}
 }
