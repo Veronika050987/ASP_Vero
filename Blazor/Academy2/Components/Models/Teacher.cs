@@ -10,8 +10,12 @@ namespace Academy2.Components.Models
 		public int teacher_id { get; set; }
 		public DateOnly work_since { get; set; } = default!;
 		public decimal rate { get; set; }
-
+		[NotMapped]
+		[Required(ErrorMessage = "Please select at least one discipline.")]
+		public List<int> SelectedDisciplineIds { get; set; } = new List<int>();
+		[NotMapped]
+		public string? SelectedDisciplineIdAsString { get; set; }
 		//Navigation properties:
-		public ICollection<TeacherDisciplineRelation> DisciplinesRelations { get; set; } = default!;
+		public ICollection<TeacherDisciplineRelation> DisciplinesRelations { get; set; } = new List<TeacherDisciplineRelation>();
 	}
 }

@@ -72,6 +72,19 @@
                 <div class="photo-container">
                     <Photo Human="@Teacher" allow_change=true />
                 </div>
+                <div class="mb-3">
+                    <label for="disciplines">Disciplines</label>
+                    <InputSelect @bind-Value="Teacher.SelectedDisciplineIdAsString" class="form-control" id="disciplines">
+                     <option value="" disabled>Please, choose a discipline</option>
+                        @if (Disciplines != null)
+                     {
+                            @foreach (Discipline d in Disciplines)
+                            {
+                                <option value="@d.discipline_id.ToString()">@d.discipline_name</option>
+                            }
+                     }
+                    </InputSelect>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
@@ -86,11 +99,81 @@
     [SupplyParameterFromForm]
     private Teacher Teacher { get; set; } = new();
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private List<Discipline> Disciplines { get; set; } = new();
+
+    private string? SelectedDisciplineIdAsString { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        Disciplines = await context.Disciplines.ToListAsync();
+
+        if(Teacher.teacher_id != 0)
+        {
+            var teacherDisciplineRelation = await context.TeachersDisciplinesRelation
+                        .FirstOrDefaultAsync(tdr => tdr.teacher == Teacher.teacher_id);
+            if(teacherDisciplineRelation != null)
+            {
+                SelectedDisciplineIdAsString = teacherDisciplineRelation.discipline.ToString();
+                Teacher.SelectedDisciplineIdAsString = SelectedDisciplineIdAsString;
+            }
+        }
+
+    }
+
+    // This method will be called when the form is submitted
+    private async Task HandleFormSubmit()
+    {
+        // Convert the selected discipline ID back to an integer and add to SelectedDisciplineIds
+        if(!string.IsNullOrEmpty(Teacher.SelectedDisciplineIdAsString))
+        {
+            if(int.TryParse(Teacher.SelectedDisciplineIdAsString, out int disciplineId))
+            {
+                // Clear existing selections to avoid duplicates
+                Teacher.SelectedDisciplineIds.Clear();
+                Teacher.SelectedDisciplineIds.Add(disciplineId);
+            }
+        }
+    }
+
     private async Task AddTeacher()
     {
-        using var context = DbFactory.CreateDbContext();
+        using var context = await DbFactory.CreateDbContextAsync();
+
+        int selectedDisciplineId = 0;
+        if (!string.IsNullOrEmpty(Teacher.SelectedDisciplineIdAsString))
+        {
+            if (int.TryParse(Teacher.SelectedDisciplineIdAsString, out int disciplineId))
+            {
+                selectedDisciplineId = disciplineId;
+            }
+            else
+            {
+                Console.WriteLine($"Error: Invalid discipline ID format: {Teacher.SelectedDisciplineIdAsString}");
+                return;
+            }
+        }
+
+        Teacher.SelectedDisciplineIds.Clear();
+        if (selectedDisciplineId != 0)
+        {
+            Teacher.SelectedDisciplineIds.Add(selectedDisciplineId);
+        }
+
         context.Teachers.Add(Teacher);
+
+        if (selectedDisciplineId != 0)
+        {
+            var teacherDisciplineRelation = new TeacherDisciplineRelation
+            {
+                discipline = selectedDisciplineId
+            };
+            if (Teacher.DisciplinesRelations == null)
+            {
+                Teacher.DisciplinesRelations = new List<TeacherDisciplineRelation>();
+            }
+            Teacher.DisciplinesRelations.Add(teacherDisciplineRelation);
+        }
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/teachers");
     }
