@@ -1,15 +1,17 @@
 ﻿@* <h3>Photo</h3> *@
 
-<div class="photo-area">
-	@if(Human.photo !=null)
-	{		
+<div>
+	<div class="photo-area">
+		@if(Human.photo !=null)
+		{
 		<img src="data:image;base64,@Convert.ToBase64String(Human.photo)" alt="Photo" />
+		}
+	</div>
+	@if (allow_change)
+	{
+	<InputFile OnChange="LoadPhoto" />
 	}
 </div>
-@if (allow_change)
-{
-	<InputFile OnChange="LoadPhoto" />
-}
 @code {
 	// [Parameter]
 	// public byte[] data { get; set; } = default!;

@@ -75,7 +75,7 @@ else
                             <ValidationMessage For="() => Teacher.rate" class="text-danger" />
                         </div>
                     </div>
-                    <div class="photo-container">
+					<div class="photo-container">
                         @* @if(Teacher.photo != null) *@
                         
                         <Photo Human="@Teacher" allow_change=true/>
@@ -83,13 +83,30 @@ else
                         @* <img src="data:image;base64,@Convert.ToBase64String(Teacher.photo)"/> *@
                         
                         @* <InputFile OnChange="LoadPhoto"/> *@
+						<div class="mb-3" style="height:30vh;align-content:center;">
+                            <h5>Выберите дисциплину: </h5>
+                            <InputSelect @bind-Value="discipline" class="form-control">
+                                @foreach(Discipline d in Disciplines)
+                                {
+                                <option value="@d.discipline_id">@d.discipline_name</option>
+                                }
+                            </InputSelect>
+                            <button type="button" class="btn-primary" @onclick="AddDiscipline">Добавить</button>
+                            <ul>
+                                @foreach(TeacherDisciplineRelation tdr in NewDisciplines)
+                                {
+                                   <li>@tdr.Discipline.discipline_name</li>
+                                }
+                            </ul>
+                            <hr/>
+                            <ul>
+                                @foreach(TeacherDisciplineRelation tdr in TDR)
+                                {
+                                   <li>@tdr.Discipline.discipline_name</li>
+                                }
+                            </ul>
+                        </div>
                     </div>
-                    <InputSelect @bind-Value="discipline">
-                        @foreach(Discipline d in Disciplines)
-                        {
-                            <option value="@d.discipline_id">@d.discipline_name</option>
-                        }
-                    </InputSelect>
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>
@@ -107,8 +124,9 @@ else
 
     [SupplyParameterFromForm]
     private Teacher? Teacher { get; set; }
-    DbSet<Discipline>? Disciplines { get; set; }
-    DbSet<TeacherDisciplineRelation>? TDR { get; set; }
+    ICollection<Discipline>? Disciplines { get; set; }
+    ICollection<TeacherDisciplineRelation>? TDR { get; set; }
+    List<TeacherDisciplineRelation> NewDisciplines = new List<TeacherDisciplineRelation>();
     int discipline;
     // IBrowserFile url { get; set; }
     // async Task LoadPhoto(InputFileChangeEventArgs e)
@@ -124,15 +142,22 @@ else
         using var context = DbFactory.CreateDbContext();
         Teacher ??= await context.Teachers.FirstOrDefaultAsync(m => m.teacher_id == teacher_id);
 
-        Disciplines = context.Disciplines;
+        Disciplines = await context.Disciplines.Where().ToListAsync();
 
-        TDR = context.TeachersDisciplinesRelation;
+        TDR = await context.TeachersDisciplinesRelation.Where(t => t.teacher == teacher_id).ToListAsync();
         if (Teacher is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
     }
-
+    void AddDiscipline()
+    {
+        TeacherDisciplineRelation newRelation = new TeacherDisciplineRelation { teacher = teacher_id, discipline = discipline };
+        newRelation.Teacher = Teacher;
+        newRelation.Discipline = Disciplines.Where(d => d.discipline_id == discipline).First();
+        //if(NewDisciplines.Contains(newRelation))
+        NewDisciplines.Add(newRelation);
+    }
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateTeacher()
