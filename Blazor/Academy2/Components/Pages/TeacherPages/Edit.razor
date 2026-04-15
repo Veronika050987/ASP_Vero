@@ -87,15 +87,15 @@ else
                             <h5>Выберите дисциплину: </h5>
                             <InputSelect @bind-Value="discipline" class="form-control">
                                 @foreach(Discipline d in Disciplines)
-                                {
-                                <option value="@d.discipline_id">@d.discipline_name</option>
+                                {                                    
+                                        <option value="@d.discipline_id">@d.discipline_name</option>                                                                            }
                                 }
                             </InputSelect>
                             <button type="button" class="btn-primary" @onclick="AddDiscipline">Добавить</button>
                             <ul>
                                 @foreach(TeacherDisciplineRelation tdr in NewDisciplines)
                                 {
-                                   <li>@tdr.Discipline.discipline_name</li>
+                                   <li>@tdr.Discipline.discipline_name @tdr.discipline</li>
                                 }
                             </ul>
                             <hr/>
@@ -142,7 +142,7 @@ else
         using var context = DbFactory.CreateDbContext();
         Teacher ??= await context.Teachers.FirstOrDefaultAsync(m => m.teacher_id == teacher_id);
 
-        Disciplines = await context.Disciplines.Where().ToListAsync();
+        Disciplines = await context.Disciplines.ToListAsync();
 
         TDR = await context.TeachersDisciplinesRelation.Where(t => t.teacher == teacher_id).ToListAsync();
         if (Teacher is null)
@@ -164,6 +164,7 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         context.Attach(Teacher!).State = EntityState.Modified;
+        await context.TeachersDisciplinesRelation.AddRangeAsync(NewDisciplines);
 
         try
         {
