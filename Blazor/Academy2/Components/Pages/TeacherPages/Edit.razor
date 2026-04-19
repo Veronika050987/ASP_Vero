@@ -86,9 +86,11 @@ else
 						<div class="mb-3" style="height:30vh;align-content:center;">
                             <h5>Выберите дисциплину: </h5>
                             <InputSelect @bind-Value="discipline" class="form-control">
+                                <option disabled selected value="-1"> ---- Выберите дисциплину ---- </option>
                                 @foreach(Discipline d in Disciplines)
-                                {                                    
-                                        <option value="@d.discipline_id">@d.discipline_name</option>                                                                            }
+                                {
+                                    if (TDR.Any(tdr => tdr.discipline == d.discipline_id) || NewDisciplines.Any(nd => nd.discipline == d.discipline_id)) continue; 
+                                    <option value="@d.discipline_id">@d.discipline_name</option>                                                                            }
                                 }
                             </InputSelect>
                             <button type="button" class="btn-primary" @onclick="AddDiscipline">Добавить</button>
@@ -127,7 +129,7 @@ else
     ICollection<Discipline>? Disciplines { get; set; }
     ICollection<TeacherDisciplineRelation>? TDR { get; set; }
     List<TeacherDisciplineRelation> NewDisciplines = new List<TeacherDisciplineRelation>();
-    int discipline;
+    int discipline=0-1;
     // IBrowserFile url { get; set; }
     // async Task LoadPhoto(InputFileChangeEventArgs e)
     // {
@@ -152,12 +154,14 @@ else
     }
     void AddDiscipline()
     {
+        if (discipline == -1) return;
         TeacherDisciplineRelation newRelation = new TeacherDisciplineRelation { teacher = teacher_id, discipline = discipline };
         newRelation.Teacher = Teacher;
         newRelation.Discipline = Disciplines.Where(d => d.discipline_id == discipline).First();
         //if (NewDisciplines.Contains(newRelation)) return;
         if (NewDisciplines.Any(d => d.discipline == discipline)) return;
         NewDisciplines.Add(newRelation);
+        discipline = -1;
     }
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
@@ -199,7 +203,8 @@ else
             }
         }
 
-        NavigationManager.NavigateTo("/teachers");
+        NavigationManager.NavigateTo($"/teachers/details?teacher_id={teacher_id}");
+        //NavigationManager.NavigateTo("/teachers");
     }
 
     private bool TeacherExists(int teacher_id)
