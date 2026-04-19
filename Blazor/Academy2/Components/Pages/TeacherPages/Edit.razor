@@ -155,7 +155,8 @@ else
         TeacherDisciplineRelation newRelation = new TeacherDisciplineRelation { teacher = teacher_id, discipline = discipline };
         newRelation.Teacher = Teacher;
         newRelation.Discipline = Disciplines.Where(d => d.discipline_id == discipline).First();
-        //if(NewDisciplines.Contains(newRelation))
+        //if (NewDisciplines.Contains(newRelation)) return;
+        if (NewDisciplines.Any(d => d.discipline == discipline)) return;
         NewDisciplines.Add(newRelation);
     }
     // To protect from overposting attacks, enable the specific properties you want to bind to.
