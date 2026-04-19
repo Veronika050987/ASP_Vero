@@ -1,0 +1,82 @@
+﻿@using Academy2.Components.Models
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<Academy2.Data.Academy2Context> DbFactory
+@rendermode InteractiveServer
+
+    <h3>AddDisciplines</h3>
+    <form class="mb-3" style="height:30vh;align-content:center;" @onsubmit="Update">
+        <h5>Выберите дисциплину: </h5>
+        <InputSelect @bind-Value="discipline" class="form-control">
+            <option disabled selected value="-1"> ---- Выберите дисциплину ---- </option>
+            @if(Disciplines != null)
+            {
+                @foreach (Discipline d in Disciplines)
+                {
+                    if (TDR.Any(tdr => tdr.discipline == d.discipline_id) || NewDisciplines.Any(nd => nd.discipline == d.discipline_id)) 
+                    continue;
+                    <option value="@d.discipline_id">@d.discipline_name</option>
+                }
+            }
+        </InputSelect>
+        <button type="button" class="btn-primary" @onclick="AddDiscipline">Добавить</button>
+        <ul>
+            @foreach (TeacherDisciplineRelation tdr in NewDisciplines)
+            {
+            <li>@tdr.Discipline.discipline_name @tdr.discipline</li>
+            }
+        </ul>
+        <hr />
+        <ul>
+            @if(TDR != null)
+            {
+            
+                @foreach (TeacherDisciplineRelation tdr in TDR)
+                {
+                    <li>@tdr.Discipline.discipline_name</li>
+                }
+            }
+        </ul>
+    </form>
+
+@code 
+{
+    [Parameter]
+    public Models.Teacher Teacher { get; set; }
+    ICollection<Discipline>? Disciplines { get; set; }
+    [SupplyParameterFromForm]
+    ICollection<TeacherDisciplineRelation>? TDR { get; set; }
+    List<TeacherDisciplineRelation> NewDisciplines = new List<TeacherDisciplineRelation>();
+
+    int discipline = 0 - 1;
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Disciplines = await context.Disciplines.ToListAsync();
+
+        TDR = await context.TeachersDisciplinesRelation.Where(t => t.teacher == Teacher.teacher_id).ToListAsync();
+    }
+    void AddDiscipline()
+    {
+        if (discipline == -1) return;
+        TeacherDisciplineRelation newRelation = new TeacherDisciplineRelation { teacher = Teacher.teacher_id, discipline = discipline };
+        newRelation.Teacher = Teacher;
+        newRelation.Discipline = Disciplines.Where(d => d.discipline_id == discipline).First();
+        //if (NewDisciplines.Contains(newRelation)) return;
+        if (NewDisciplines.Any(d => d.discipline == discipline)) return;
+        NewDisciplines.Add(newRelation);
+        discipline = -1;
+    }
+    async Task Update()
+    {
+        using Data.Academy2Context context = DbFactory.CreateDbContext();
+        List<TeacherDisciplineRelation> pairs = new List<TeacherDisciplineRelation>();
+        foreach (TeacherDisciplineRelation tdr in NewDisciplines)
+            pairs.Add(new TeacherDisciplineRelation { teacher = tdr.teacher, discipline = tdr.discipline });
+        {
+            // tdr.Discipline = null;
+            // tdr.Teacher = null;
+        }
+        await context.TeachersDisciplinesRelation.AddRangeAsync(pairs);
+        await context.SaveChangesAsync();
+    }
+}
