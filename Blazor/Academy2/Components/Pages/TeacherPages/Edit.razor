@@ -164,13 +164,23 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         context.Attach(Teacher!).State = EntityState.Modified;
-        //await context.TeachersDisciplinesRelation.AddRangeAsync(NewDisciplines);
-        TeacherDisciplineRelation new_relation = new TeacherDisciplineRelation
-            {
-                discipline = NewDisciplines.First().discipline,
-                teacher = NewDisciplines.First().teacher,
-            };
-        context.TeachersDisciplinesRelation.Add(new_relation);
+        List<TeacherDisciplineRelation> pairs = new List<TeacherDisciplineRelation>();
+        foreach (TeacherDisciplineRelation tdr in NewDisciplines)
+            pairs.Add(new TeacherDisciplineRelation { teacher = tdr.teacher, discipline = tdr.discipline });
+        {
+            // tdr.Discipline = null; 
+            // tdr.Teacher = null;
+        }
+        await context.TeachersDisciplinesRelation.AddRangeAsync(pairs);
+
+        ///////////////////////////////////////////////////////////
+        // TeacherDisciplineRelation new_relation = new TeacherDisciplineRelation
+        //     {
+        //         discipline = NewDisciplines.First().discipline,
+        //         teacher = NewDisciplines.First().teacher,
+        //     };
+        // context.TeachersDisciplinesRelation.Add(new_relation);
+        ////////////////////////////////////////////////////////////
 
         try
         {
