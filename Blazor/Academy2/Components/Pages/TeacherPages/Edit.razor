@@ -127,68 +127,44 @@ else
 
     [SupplyParameterFromForm]
     private Teacher? Teacher { get; set; }
-    // ICollection<Discipline>? Disciplines { get; set; }
-    // ICollection<TeacherDisciplineRelation>? TDR { get; set; }
+    private AddDisciplines newDisciplines;
+
+    // ICollection<Discipline> Disciplines { get; set; }
+    // ICollection<TeacherDisciplineRelation> TDR { get; set; }
     // List<TeacherDisciplineRelation> NewDisciplines = new List<TeacherDisciplineRelation>();
 
-    //int discipline=0-1;
-
-    // IBrowserFile url { get; set; }
-    // async Task LoadPhoto(InputFileChangeEventArgs e)
-    // {
-    //     url = e.File;
-    //     MemoryStream ms = new MemoryStream();
-    //     await url.OpenReadStream(1024*1024*10).CopyToAsync(ms);
-    //     Teacher.photo = ms.ToArray();
-    // }
+    // int discipline = -1;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
         Teacher ??= await context.Teachers.FirstOrDefaultAsync(m => m.teacher_id == teacher_id);
-
         // Disciplines = await context.Disciplines.ToListAsync();
-
         // TDR = await context.TeachersDisciplinesRelation.Where(t => t.teacher == teacher_id).ToListAsync();
+
         if (Teacher is null)
         {
             NavigationManager.NavigateTo("notfound");
         }
     }
+
     // void AddDiscipline()
     // {
     //     if (discipline == -1) return;
     //     TeacherDisciplineRelation newRelation = new TeacherDisciplineRelation { teacher = teacher_id, discipline = discipline };
-    //     newRelation.Teacher = Teacher;
-    //     newRelation.Discipline = Disciplines.Where(d => d.discipline_id == discipline).First();
-    //     //if (NewDisciplines.Contains(newRelation)) return;
     //     if (NewDisciplines.Any(d => d.discipline == discipline)) return;
     //     NewDisciplines.Add(newRelation);
     //     discipline = -1;
     // }
+
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task UpdateTeacher()
     {
         using var context = DbFactory.CreateDbContext();
         context.Attach(Teacher!).State = EntityState.Modified;
-        // List<TeacherDisciplineRelation> pairs = new List<TeacherDisciplineRelation>();
-        // foreach (TeacherDisciplineRelation tdr in NewDisciplines)
-        //     pairs.Add(new TeacherDisciplineRelation { teacher = tdr.teacher, discipline = tdr.discipline });
-        // {
-        //     // tdr.Discipline = null; 
-        //     // tdr.Teacher = null;
-        // }
-        // await context.TeachersDisciplinesRelation.AddRangeAsync(pairs);
-
-        ///////////////////////////////////////////////////////////
-        // TeacherDisciplineRelation new_relation = new TeacherDisciplineRelation
-        //     {
-        //         discipline = NewDisciplines.First().discipline,
-        //         teacher = NewDisciplines.First().teacher,
-        //     };
-        // context.TeachersDisciplinesRelation.Add(new_relation);
-        ////////////////////////////////////////////////////////////
+        // await context.TeachersDisciplinesRelation.AddRangeAsync(NewDisciplines);
+        newDisciplines.Update();
 
         try
         {
@@ -207,7 +183,6 @@ else
         }
 
         NavigationManager.NavigateTo($"/teachers/details?teacher_id={teacher_id}");
-        //NavigationManager.NavigateTo("/teachers");
     }
 
     private bool TeacherExists(int teacher_id)
