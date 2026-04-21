@@ -17,7 +17,15 @@
             }
         }
     </InputSelect>
-    <button type="button" class="btn btn-primary" @onclick="AddDiscipline">Добавить</button>
+    <button type="button" class="btn btn-primary" @onclick="AddDiscipline" disabled="@(discipline == -1 || Teacher == null)">Добавить</button>
+    @if (!string.IsNullOrEmpty(feedbackMessage))
+    {
+        <div class="alert @(feedbackMessage.Contains("успешно") ? "alert-success" : "alert-danger")" role="alert">
+            @feedbackMessage
+        </div>
+    }
+
+    <hr />
     <ul>
         @if (Disciplines != null)
         {
@@ -49,28 +57,91 @@
     ICollection<TeacherDisciplineRelation> TDR { get; set; }
     List<TeacherDisciplineRelation> NewDisciplines = new List<TeacherDisciplineRelation>();
     int discipline = -1;
+    private string feedbackMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        Disciplines = await context.Disciplines.ToListAsync();
-        TDR = await context.TeachersDisciplinesRelation.Where(t => t.teacher == Teacher.teacher_id).ToListAsync();
+        // using var context = DbFactory.CreateDbContext();
+        // Disciplines = await context.Disciplines.ToListAsync();
+        // TDR = await context.TeachersDisciplinesRelation.Where(t => t.teacher == Teacher.teacher_id).ToListAsync();
+        if (Teacher != null)
+        {
+            await LoadData();
+        }
+    }
+
+    public async Task LoadData(Models.Teacher teacherInstance)
+    {
+        Teacher = teacherInstance;
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        if (Teacher == null) return;
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            Disciplines = await context.Disciplines.ToListAsync();
+            TDR = await context.TeachersDisciplinesRelation
+                .Where(t => t.teacher == Teacher.teacher_id)
+                .Include(t => t.Discipline)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            feedbackMessage = $"Ошибка при загрузке данных: {ex.Message}";
+            Console.WriteLine(ex.Message);
+        }
     }
 
     void AddDiscipline()
     {
-        if (discipline == -1) return;
-        TeacherDisciplineRelation newRelation = new TeacherDisciplineRelation { teacher = Teacher.teacher_id, discipline = discipline };
-        if (NewDisciplines.Any(d => d.discipline == discipline)) return;
+        if (discipline == -1 || Teacher == null) return;
+
+        if (NewDisciplines.Any(d => d.discipline == discipline))
+        {
+            feedbackMessage = "Дисциплина уже добавлена.";
+            return;
+        }
+
+        if (TDR.Any(tdr => tdr.discipline == discipline))
+        {
+            feedbackMessage = "Дисциплина уже назначена учителю.";
+            return;
+        }
+
+        TeacherDisciplineRelation newRelation = new TeacherDisciplineRelation
+        {
+            teacher = Teacher.teacher_id,
+            discipline = discipline
+        };
+
         NewDisciplines.Add(newRelation);
+        feedbackMessage = "Дисциплина добавлена в список.";
         discipline = -1;
     }
 
     public async Task Update()
     {
-        using var context = DbFactory.CreateDbContext();
-        await context.TeachersDisciplinesRelation.AddRangeAsync(NewDisciplines);
-        await context.SaveChangesAsync();
+        if (NewDisciplines.Any())
+        {
+            using var context = DbFactory.CreateDbContext();
+            await context.TeachersDisciplinesRelation.AddRangeAsync(NewDisciplines);
+            await context.SaveChangesAsync();
+            feedbackMessage = "Новые дисциплины сохранены.";
+            NewDisciplines.Clear(); // Очищаем список после сохранения
+            // Перезагружаем TDR, чтобы увидеть изменения в UI компонента
+            TDR = await context.TeachersDisciplinesRelation
+                .Where(t => t.teacher == Teacher.teacher_id)
+                .Include(t => t.Discipline)
+                .ToListAsync();
+        }
+        else
+        {
+            feedbackMessage = "Нет новых дисциплин для сохранения.";
+        }
     }
 
 }

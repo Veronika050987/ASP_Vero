@@ -112,6 +112,7 @@ else
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
             </EditForm>
         </div>
     </div>
@@ -129,59 +130,64 @@ else
     private Teacher? Teacher { get; set; }
     private AddDisciplines newDisciplines;
 
-    // ICollection<Discipline> Disciplines { get; set; }
-    // ICollection<TeacherDisciplineRelation> TDR { get; set; }
-    // List<TeacherDisciplineRelation> NewDisciplines = new List<TeacherDisciplineRelation>();
-
-    // int discipline = -1;
-
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        Teacher ??= await context.Teachers.FirstOrDefaultAsync(m => m.teacher_id == teacher_id);
-        // Disciplines = await context.Disciplines.ToListAsync();
-        // TDR = await context.TeachersDisciplinesRelation.Where(t => t.teacher == teacher_id).ToListAsync();
-
-        if (Teacher is null)
+        try
         {
-            NavigationManager.NavigateTo("notfound");
+            using var context = DbFactory.CreateDbContext();
+            Teacher ??= await context.Teachers.FirstOrDefaultAsync(m => m.teacher_id == teacher_id);
+
+            if (Teacher is null)
+            {
+                NavigationManager.NavigateTo("notfound");
+            }           
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при загрузке учителя: {ex.Message}");
+            NavigationManager.NavigateTo("error");
         }
     }
 
-    // void AddDiscipline()
-    // {
-    //     if (discipline == -1) return;
-    //     TeacherDisciplineRelation newRelation = new TeacherDisciplineRelation { teacher = teacher_id, discipline = discipline };
-    //     if (NewDisciplines.Any(d => d.discipline == discipline)) return;
-    //     NewDisciplines.Add(newRelation);
-    //     discipline = -1;
-    // }
-
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Teacher != null && newDisciplines != null)
+        {
+            await newDisciplines.LoadData(Teacher);
+        }
+    }
+    
     private async Task UpdateTeacher()
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Attach(Teacher!).State = EntityState.Modified;
-        // await context.TeachersDisciplinesRelation.AddRangeAsync(NewDisciplines);
-        newDisciplines.Update();
+        if (Teacher is null) return;
 
         try
         {
+            using var context = await DbFactory.CreateDbContextAsync();
+
+            context.Attach(Teacher).State = EntityState.Modified;
+
+            if (newDisciplines != null)
+            {
+                await newDisciplines.Update();
+            }
+
             await context.SaveChangesAsync();
+
+            NavigationManager.NavigateTo($"/teachers/details?teacher_id={teacher_id}");
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!TeacherExists(Teacher!.teacher_id))
-            {
-                NavigationManager.NavigateTo("notfound");
-            }
-            else
-            {
-                throw;
-            }
+            await OnInitializedAsync();
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при сохранении: {ex.Message}");
+        }
+    }
 
+    private void CancelEdit()
+    {
         NavigationManager.NavigateTo($"/teachers/details?teacher_id={teacher_id}");
     }
 
