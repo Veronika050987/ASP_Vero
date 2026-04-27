@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Academy", "Academy\Academy.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Academy2", "Academy2\Academy2.csproj", "{2DF6D0D1-DBB9-4391-9648-C5C6DBD7A8B3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core_API_ImageUploader", "Core_API_ImageUploader\Core_API_ImageUploader.csproj", "{FC8ED164-034C-45BF-B24B-C0D23BBD623E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Blazor_FileUploader", "Blazor_FileUploader\Blazor_FileUploader.csproj", "{BCBE2919-E00D-4D5F-95B3-052C3ACF490C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,14 @@ Global
 		{2DF6D0D1-DBB9-4391-9648-C5C6DBD7A8B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DF6D0D1-DBB9-4391-9648-C5C6DBD7A8B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DF6D0D1-DBB9-4391-9648-C5C6DBD7A8B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC8ED164-034C-45BF-B24B-C0D23BBD623E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC8ED164-034C-45BF-B24B-C0D23BBD623E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC8ED164-034C-45BF-B24B-C0D23BBD623E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC8ED164-034C-45BF-B24B-C0D23BBD623E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCBE2919-E00D-4D5F-95B3-052C3ACF490C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCBE2919-E00D-4D5F-95B3-052C3ACF490C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCBE2919-E00D-4D5F-95B3-052C3ACF490C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCBE2919-E00D-4D5F-95B3-052C3ACF490C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
