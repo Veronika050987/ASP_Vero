@@ -10,6 +10,7 @@ namespace Academy2.Components.Models
 
 		[Required]
 		[ForeignKey(nameof(Group))]
+		[Display(Name = "Группа")]
 		public int group { get; set; }
 
 		//navigation properties
