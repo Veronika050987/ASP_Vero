@@ -17,5 +17,10 @@ namespace Academy2.Components.Models
 		public string? phone { get; set; }
 		public byte[]? photo { get; set; }
 
+		public int Age
+		{
+			get => (int)((DateOnly.FromDateTime(DateTime.Now).DayNumber - birth_date.DayNumber)/365.25);
+		}
+
 	}
 }

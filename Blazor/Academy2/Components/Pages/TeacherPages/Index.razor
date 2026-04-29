@@ -5,6 +5,7 @@
 @using Academy2.Data
 @implements IAsyncDisposable
 @inject IDbContextFactory<Academy2.Data.Academy2Context> DbFactory
+@rendermode InteractiveServer
 
 <PageTitle>Index</PageTitle>
 
@@ -16,10 +17,11 @@
 
 <QuickGrid Class="table" Items="context.Teachers">
    
-    <PropertyColumn Property="teacher => teacher.last_name" />
-    <PropertyColumn Property="teacher => teacher.first_name" />
-    <PropertyColumn Property="teacher => teacher.middle_name" />
-    <PropertyColumn Property="teacher => teacher.birth_date" />
+    <PropertyColumn Sortable="true" Property="teacher => teacher.last_name" />
+    <PropertyColumn Sortable="true"  Property="teacher => teacher.first_name" />
+    <PropertyColumn Sortable="true"  Property="teacher => teacher.middle_name" />
+	<TemplateColumn Title="Age" Sortable="true" SortBy="ageSort">@context.Age</TemplateColumn>
+	@* <PropertyColumn Property="teacher => teacher.birth_date" /> *@
     @* <PropertyColumn Property="teacher => teacher.email" />
     <PropertyColumn Property="teacher => teacher.phone" />
     <PropertyColumn Property="teacher => teacher.photo" /> *@
@@ -35,7 +37,7 @@
 
 @code {
     private Academy2Context context = default!;
-
+    GridSort<Teacher> ageSort = GridSort<Teacher>.ByDescending(t => t.birth_date);
     protected override void OnInitialized()
     {
         context = DbFactory.CreateDbContext();
