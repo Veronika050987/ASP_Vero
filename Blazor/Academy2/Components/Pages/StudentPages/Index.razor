@@ -48,7 +48,8 @@ using System.Linq.Expressions.Expression
 
 		<TemplateColumn Title="Возраст" 
                         Sortable="true"
-						InitialSortDirection="SortDirection.Ascending"
+                        SortBy="ageSort"
+						InitialSortDirection="SortDirection.Descending"
                         IsDefaultSortColumn="true"
                         Context="student"
                         TGridItem="Student">
@@ -66,6 +67,7 @@ using System.Linq.Expressions.Expression
 @code {
     private Academy2Context context = default!;
     private IQueryable<Student> Students = Enumerable.Empty<Student>().AsQueryable();
+    GridSort<Student> ageSort = GridSort<Student>.ByDescending(t => t.birth_date);
 
     [SupplyParameterFromQuery]
     private string? nameFilter { get; set; }
